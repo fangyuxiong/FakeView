@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xfy.fakeview.library.TraceFrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.xfy.fakeview.TestTranslateActivity">
+
+    <FrameLayout
+        android:id="@+id/container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <ImageView
+            android:id="@+id/image1"
+            android:layout_width="113dp"
+            android:layout_height="202dp"
+            android:layout_marginLeft="10dp"
+            android:src="@drawable/me"
+            android:background="@drawable/ic_launcher_background"/>
+
+        <ImageButton
+            android:id="@+id/image2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="right"
+            android:src="@drawable/ic_launcher_background"/>
+
+        <TextView
+            android:id="@+id/text1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="30sp"
+            android:textColor="#123456"
+            android:background="#654321"
+            android:layout_gravity="center|right"
+            android:layout_marginRight="10dp"
+            android:text="test test" />
+
+        <Button
+            android:id="@+id/text2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="40sp"
+            android:text="click"
+            android:layout_gravity="center" />
+    </FrameLayout>
+
+</xfy.fakeview.library.TraceFrameLayout>
