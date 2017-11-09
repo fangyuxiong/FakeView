@@ -22,3 +22,7 @@ dependencies {
     provided "com.android.support:appcompat-v7:$appcompatVersion"
     testCompile 'junit:junit:4.12'
 }
+ext.GROUP = "xfy.fakeview.library"
+ext.ARTIFACT_ID = "fview"
+ext.libVersion = rootProject.ext.libVersion
+apply from: 'upload_maven.gradle'

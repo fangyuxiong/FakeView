@@ -27,6 +27,22 @@ allprojects {
         appMinSdkVersion=15
         targetSdkVersion=23
         appcompatVersion="24.2.1"
+
+        libVersion="0.10001"
+    }
+}
+
+subprojects {
+
+    buildscript {
+        repositories {
+            mavenCentral()
+            jcenter()
+        }
+        dependencies {
+            classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.0'
+            classpath 'com.github.dcendents:android-maven-gradle-plugin:1.5'
+        }
     }
 }
 
