@@ -20,6 +20,6 @@ android {
 dependencies {
     compile "com.android.support:appcompat-v7:$appcompatVersion"
     testCompile 'junit:junit:4.12'
-    compile "xfy.fakeview.library:fview:$libVersion"
-//    compile project(':library')
+//    compile "xfy.fakeview.library:fview:$libVersion"
+    compile project(':fview')
 }
