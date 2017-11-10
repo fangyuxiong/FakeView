@@ -1,6 +1,7 @@
 package com.xfy.fakeview;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -26,6 +27,13 @@ public class TestMergeLayersActivity extends Activity implements View.OnClickLis
         mergeLayout2 = (FrameLayout) findViewById(R.id.merge2);
         mergeLayout3 = (FrameLayout) findViewById(R.id.merge3);
 
+        mergeLayout1.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(TestMergeLayersActivity.this, TestMergeEngineActivity.class));
+            }
+        });
+
         findViewById(R.id.merge_btn).setOnClickListener(this);
     }
 
@@ -45,7 +53,7 @@ public class TestMergeLayersActivity extends Activity implements View.OnClickLis
             manager1.mergeChildrenLayers();
         }
         if (manager2 == null) {
-            manager2 = new LayersMergeManager(mergeLayout2);
+            manager2 = new LayersMergeManager(mergeLayout2, true);
             manager2.mergeChildrenLayers();
         }
         if (manager3 == null) {

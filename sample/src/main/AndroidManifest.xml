@@ -14,7 +14,8 @@
             </intent-filter>
         </activity>
         <activity android:name=".TestTranslateActivity" />
-        <activity android:name=".TestMergeLayersActivity"></activity>
+        <activity android:name=".TestMergeLayersActivity" />
+        <activity android:name=".TestMergeEngineActivity"></activity>
     </application>
 
 </manifest>

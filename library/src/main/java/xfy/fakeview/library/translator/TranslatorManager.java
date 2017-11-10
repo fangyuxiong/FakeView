@@ -40,7 +40,7 @@ public class TranslatorManager {
      *  when translating failed, throw Exception.
      * @see #setDebug(boolean)
      */
-    private static boolean DEBUG = true;
+    private static boolean DEBUG = false;
     public static void setDebug(boolean debug) {
         DEBUG = debug;
     }
