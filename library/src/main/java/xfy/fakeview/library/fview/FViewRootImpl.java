@@ -22,7 +22,7 @@ import xfy.fakeview.library.fview.utils.FMeasureSpec;
  */
 public class FViewRootImpl extends View implements IFViewRoot {
     private static final String TAG = "FViewRootImpl";
-    private static boolean DEBUG = true;
+    private static boolean DEBUG = false;
 
     public static void setDebug(boolean debug) {
         DEBUG = debug;

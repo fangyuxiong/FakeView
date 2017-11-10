@@ -37,7 +37,7 @@ public class FView implements IFView, Drawable.Callback{
      * true: 绘制Fview轮廓
      * @see #setDebug(boolean)
      */
-    protected static boolean DEBUG = true;
+    protected static boolean DEBUG = false;
     public static void setDebug(boolean debug) {
         DEBUG = debug;
     }
