@@ -111,7 +111,7 @@ public class MainActivity extends Activity implements IFView.OnClickListener, IF
     public boolean onLongClick(IFView view) {
         switch (view.getId()) {
             case 1:
-                Toast.makeText(this, "long container click", Toast.LENGTH_LONG).show();
+                startActivity(new Intent(this, TestMergeLayersActivity.class));
                 return true;
             case 2:
                 long start = System.currentTimeMillis();
