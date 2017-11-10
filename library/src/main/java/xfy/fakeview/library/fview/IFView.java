@@ -7,6 +7,7 @@ import android.support.annotation.ColorInt;
 import android.support.annotation.DrawableRes;
 import android.support.annotation.IntDef;
 import android.support.annotation.IntRange;
+import android.support.annotation.Size;
 import android.view.MotionEvent;
 
 import java.lang.annotation.Retention;
@@ -472,6 +473,24 @@ public interface IFView extends IView{
      */
     void setPadding(int l, int t, int r, int b);
 //end
+
+    /**
+     * <p>Computes the coordinates of this view on the screen. The argument
+     * must be an array of two integers. After the method returns, the array
+     * contains the x and y location in that order.</p>
+     *
+     * @param outLocation an array of two integers in which to hold the coordinates
+     */
+    void getLocationOnScreen(@Size(2) int[] outLocation);
+
+    /**
+     * <p>Computes the coordinates of this view in its window. The argument
+     * must be an array of two integers. After the method returns, the array
+     * contains the x and y location in that order.</p>
+     *
+     * @param outLocation an array of two integers in which to hold the coordinates
+     */
+    void getLocationInWindow(@Size(2) int[] outLocation);
 
 //事件处理 start
 
