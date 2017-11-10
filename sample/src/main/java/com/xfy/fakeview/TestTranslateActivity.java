@@ -8,6 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import xfy.fakeview.library.fview.IFView;
 import xfy.fakeview.library.fview.IFViewRoot;
 import xfy.fakeview.library.fview.IView;
 import xfy.fakeview.library.translator.event.OnClickListener;
@@ -102,18 +103,25 @@ public class TestTranslateActivity extends Activity implements OnClickListener.T
     public boolean onLongClick(IView view) {
         if (view == null)
             return false;
+        long start = System.currentTimeMillis();
+        int[] pos = new int[2];
+        if (view instanceof IFView) {
+            ((IFView) view).getLocationInWindow(pos);
+        }
+        long cast = System.currentTimeMillis() - start;
+        String msg = "view pos: [" + pos[0] + ", " + pos[1] + "], cast: " + cast;
         switch (view.getId()) {
             case R.id.image1:
-                showToast("long click image1");
+                showToast(msg);
                 break;
             case R.id.image2:
-                showToast("long click image2");
+                showToast(msg);
                 break;
             case R.id.text1:
-                showToast("long click text1");
+                showToast(msg);
                 break;
             case R.id.text2:
-                showToast("long click text2");
+                showToast(msg);
                 break;
             default:
                 showToast("long click what? " + view.getId());

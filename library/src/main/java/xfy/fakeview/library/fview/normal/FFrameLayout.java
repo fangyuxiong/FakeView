@@ -11,7 +11,7 @@ import xfy.fakeview.library.fview.FView;
 import xfy.fakeview.library.fview.FViewGroup;
 import xfy.fakeview.library.fview.IFViewGroup;
 import xfy.fakeview.library.fview.IFViewRoot;
-import xfy.fakeview.library.fview.FMeasureSpec;
+import xfy.fakeview.library.fview.utils.FMeasureSpec;
 
 /**
  * Created by XiongFangyu on 2017/11/7.

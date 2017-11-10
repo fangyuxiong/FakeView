@@ -114,7 +114,11 @@ public class MainActivity extends Activity implements IFView.OnClickListener, IF
                 Toast.makeText(this, "long container click", Toast.LENGTH_LONG).show();
                 return true;
             case 2:
-                Toast.makeText(this, "long image click", Toast.LENGTH_LONG).show();
+                long start = System.currentTimeMillis();
+                int[] pos = new int[2];
+                view.getLocationInWindow(pos);
+                Toast.makeText(this, "image loc: [" + pos[0] + ", " + pos[1] + "], cast: " + (System.currentTimeMillis() - start), Toast.LENGTH_LONG).show();
+
                 return true;
         }
         return false;

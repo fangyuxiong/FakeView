@@ -1,4 +1,4 @@
-package xfy.fakeview.library.fview;
+package xfy.fakeview.library.fview.utils;
 
 import android.annotation.SuppressLint;
 import android.support.annotation.IntDef;
@@ -6,6 +6,8 @@ import android.support.annotation.IntRange;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+
+import xfy.fakeview.library.fview.IFViewGroup;
 
 /**
  * A FMeasureSpec encapsulates the layout requirements passed from parent to child.

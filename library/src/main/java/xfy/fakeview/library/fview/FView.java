@@ -9,12 +9,18 @@ import android.graphics.drawable.Drawable;
 import android.os.SystemClock;
 import android.support.annotation.CallSuper;
 import android.support.annotation.NonNull;
+import android.support.annotation.Size;
 import android.util.Log;
 import android.view.MotionEvent;
+import android.view.View;
 import android.view.ViewConfiguration;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+
+import xfy.fakeview.library.fview.utils.FMeasureSpec;
+import xfy.fakeview.library.fview.utils.FViewDebugTool;
+import xfy.fakeview.library.fview.utils.ViewUtils;
 
 /**
  * Created by XiongFangyu on 2017/11/7.
@@ -587,6 +593,52 @@ public class FView implements IFView, Drawable.Callback{
     @Override
     public void setPadding(int l, int t, int r, int b) {
         internalSetPadding(l, t, r, b);
+    }
+
+    @Override
+    public void getLocationOnScreen(int[] outLocation) {
+        getLocationInWindow(outLocation);
+        if (isAttachedToWindow()) {
+            int[] windowPos = new int[2];
+            ViewUtils.getWindowPosition((View) viewRoot, windowPos);
+            outLocation[0] += windowPos[0];
+            outLocation[1] += windowPos[1];
+        }
+    }
+
+    @Override
+    public void getLocationInWindow(int[] outLocation) {
+        transformFromViewToWindowSpace(outLocation);
+    }
+
+    protected void transformFromViewToWindowSpace(@Size(2) int[] inOutLocation) {
+        if (inOutLocation == null || inOutLocation.length < 2) {
+            throw new IllegalArgumentException("inOutLocation must be an array of two integers");
+        }
+        if (!isAttachedToWindow()) {
+            inOutLocation[0] = inOutLocation[1] = 0;
+            return;
+        }
+        float position[] = new float[] {
+                bounds.left,
+                bounds.top
+        };
+        FViewParent p = parent;
+        while (p instanceof FView) {
+            final FView view = (FView) p;
+            position[0] += view.bounds.left;
+            position[1] += view.bounds.top;
+            p = view.parent;
+        }
+        if (p instanceof FViewRootImpl) {
+            FViewRootImpl root = (FViewRootImpl) p;
+            int[] rootPos = new int[2];
+            root.getLocationInWindow(rootPos);
+            position[0] += rootPos[0];
+            position[1] += rootPos[1];
+        }
+        inOutLocation[0] = Math.round(position[0]);
+        inOutLocation[1] = Math.round(position[1]);
     }
 
     private void internalSetPadding(int left, int top, int right, int bottom) {

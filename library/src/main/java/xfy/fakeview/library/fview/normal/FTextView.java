@@ -14,7 +14,7 @@ import android.text.TextUtils;
 import android.util.TypedValue;
 import android.view.Gravity;
 
-import xfy.fakeview.library.fview.FMeasureSpec;
+import xfy.fakeview.library.fview.utils.FMeasureSpec;
 import xfy.fakeview.library.fview.FView;
 import xfy.fakeview.library.fview.IFViewGroup;
 import xfy.fakeview.library.fview.IFViewRoot;

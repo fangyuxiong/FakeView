@@ -14,7 +14,7 @@ import android.support.annotation.NonNull;
 import xfy.fakeview.library.fview.FView;
 import xfy.fakeview.library.fview.IFViewRoot;
 
-import static xfy.fakeview.library.fview.FMeasureSpec.resolveSizeAndState;
+import static xfy.fakeview.library.fview.utils.FMeasureSpec.resolveSizeAndState;
 
 /**
  * Created by XiongFangyu on 2017/11/7.

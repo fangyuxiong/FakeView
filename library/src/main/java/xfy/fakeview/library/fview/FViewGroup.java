@@ -7,6 +7,8 @@ import android.view.MotionEvent;
 
 import java.util.ArrayList;
 
+import xfy.fakeview.library.fview.utils.FMeasureSpec;
+
 /**
  * Created by XiongFangyu on 2017/11/7.
  *

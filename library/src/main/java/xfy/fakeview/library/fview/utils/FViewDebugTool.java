@@ -1,4 +1,4 @@
-package xfy.fakeview.library.fview;
+package xfy.fakeview.library.fview.utils;
 
 import android.graphics.Canvas;
 import android.graphics.Color;
