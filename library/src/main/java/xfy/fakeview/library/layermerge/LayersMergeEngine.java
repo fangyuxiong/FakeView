@@ -1,6 +1,5 @@
 package xfy.fakeview.library.layermerge;
 
-import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
@@ -30,12 +29,14 @@ import xfy.fakeview.library.DebugInfo;
 public class LayersMergeEngine {
     private static final String TAG = "LayersMergeEngine";
     private static volatile LayersMergeEngine engine;
+    private static final int DELAY = 16;
 
     private LayersMergeEngine() {
         mScheduler = new Scheduler("LayersMergeEngineScheduler");
         mScheduler.start();
         mergeActions = new HashMap<>();
         mainHandler = new Handler(Looper.getMainLooper());
+        removeTags = new ArrayList<>();
     }
 
     public static LayersMergeEngine getEngine() {
@@ -55,6 +56,7 @@ public class LayersMergeEngine {
     private boolean mPause = false;
     private int mergingLayoutHashcode = -1;
     private boolean merging = false;
+    private final ArrayList<Object> removeTags;
 
     public synchronized void pause() {
         mPause = true;
@@ -64,6 +66,18 @@ public class LayersMergeEngine {
         mPause = false;
         if (!merging)
             mScheduler.post(new NextAction());
+    }
+
+    public synchronized static void release() {
+        if (engine != null) {
+            synchronized (engine) {
+                engine.pause();
+                engine.removeAllAction();
+                engine.mScheduler.quit();
+                engine.mainHandler.removeCallbacksAndMessages(null);
+            }
+            engine = null;
+        }
     }
 
     /**
@@ -92,8 +106,22 @@ public class LayersMergeEngine {
      * @return true: add to scheduler, false otherwise
      */
     public boolean addMergeAction(Object tag, FrameLayout layout, int extractInfo) {
+        return addMergeAction(new LayoutData(tag, layout, extractInfo));
+    }
+
+    /**
+     * Add a merge action
+     *
+     * @param layoutData contain layout, tag, extract info etc..
+     *                   @see LayoutData
+     * @return true: add to scheduler, false otherwise
+     */
+    public boolean addMergeAction(LayoutData layoutData) {
+        final FrameLayout layout = layoutData.layout;
         if (!LayersMergeManager.needMerge(layout))
             return false;
+        final Object tag = layoutData.tag;
+        removeTags.remove(tag);
         ArrayList<LayoutData> list = mergeActions.get(tag);
         if (list == null) {
             list = new ArrayList<>();
@@ -101,7 +129,7 @@ public class LayersMergeEngine {
         }
         if (list.contains(layout) || layout.hashCode() == mergingLayoutHashcode)
             return true;
-        list.add(new LayoutData(tag, layout, extractInfo));
+        list.add(layoutData);
         if (!merging)
             mScheduler.post(new NextAction());
         return true;
@@ -117,6 +145,7 @@ public class LayersMergeEngine {
         if (list == null)
             return;
         list.clear();
+        removeTags.add(tag);
     }
 
     /**
@@ -128,6 +157,7 @@ public class LayersMergeEngine {
             if (list != null)
                 list.clear();
         }
+        removeTags.addAll(mergeActions.keySet());
         mergeActions.clear();
     }
 
@@ -146,6 +176,12 @@ public class LayersMergeEngine {
             if (DebugInfo.DEBUG)
                 Log.d(TAG, "keys is empty");
             return;
+        }
+        if (!removeTags.isEmpty()) {
+            for (Object tag : removeTags) {
+                mergeActions.remove(tag);
+            }
+            removeTags.clear();
         }
         LayoutData layoutData = null;
         ArrayList<LayoutData> list = null;
@@ -209,12 +245,10 @@ public class LayersMergeEngine {
             if (layout == null || layout.layout == null)
                 return;
             //check the view has been through one layout
-            boolean canMerge = false;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                canMerge = layout.layout.isLaidOut();
-            } else {
-                canMerge = !layout.layout.isLayoutRequested();
-            }
+            final FrameLayout src = layout.layout;
+            final Object tag = layout.tag;
+            final int info = layout.extractInfo;
+            boolean canMerge = checkCanMerge();
             if (DebugInfo.DEBUG) {
                 Log.d(TAG, "run action: " + layout + " canMerge: " + canMerge);
             }
@@ -222,27 +256,34 @@ public class LayersMergeEngine {
             if (!canMerge) {
                 mergingLayoutHashcode = -1;
                 merging = false;
-                addMergeAction(layout.tag, layout.layout, layout.extractInfo);
-                mScheduler.postDelay(new NextAction(), 1);
+                if (!removeTags.contains(tag)) {
+                    addMergeAction(layout);
+                } else {
+                    removeTags.remove(tag);
+                }
+                mScheduler.postDelay(new NextAction(), DELAY);
                 return;
             }
             //do merge action by LayersMergeManager in main thread.
-            mainHandler.post(new Runnable() {
+            mainHandler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    LayersMergeManager manager = new LayersMergeManager(layout.layout, layout.extractInfo);
-                    manager.mergeChildrenLayers();
+                    if (!removeTags.contains(tag)) {
+                        LayersMergeManager manager = new LayersMergeManager(src, info);
+                        manager.mergeChildrenLayers();
+                    }
                     synchronized (lock) {
                         lock.notifyAll();
                     }
                 }
-            });
+            }, DELAY);
             //wait for merge action
             synchronized (lock) {
                 try {
                     lock.wait();
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    if (DebugInfo.DEBUG)
+                        e.printStackTrace();
                 }
             }
             if (DebugInfo.DEBUG) {
@@ -250,19 +291,57 @@ public class LayersMergeEngine {
             }
             mergingLayoutHashcode = -1;
             merging = false;
-            mScheduler.postDelay(new NextAction(), 1);
+            mScheduler.postDelay(new NextAction(), DELAY);
+        }
+
+        private boolean checkCanMerge() {
+            boolean laidout = checkViewIsLaidOut();
+            if (laidout) {
+                layout.laidOutTimes ++;
+            }
+            return layout.laidOutTimes >= layout.minLayoutTimes;
+        }
+
+        private boolean checkViewIsLaidOut() {
+            final FrameLayout src = layout.layout;
+            return src.getLeft() != 0 || src.getTop() != 0 || src.getRight() != 0 || src.getBottom() != 0;
         }
     }
 
-    private static class LayoutData {
+    public static class LayoutData {
         FrameLayout layout;
         int extractInfo = 0;
         Object tag;
+        int minLayoutTimes = 0;
 
-        LayoutData(Object tag, FrameLayout layout, int extractInfo) {
+        int laidOutTimes = 0;
+
+        public LayoutData(Object tag, FrameLayout layout, int extractInfo) {
+            this(tag, layout, extractInfo, 2);
+        }
+
+        public LayoutData(Object tag, FrameLayout layout, int extractInfo, int minLayoutTimes) {
             this.tag = tag;
             this.layout = layout;
             this.extractInfo = extractInfo;
+            this.minLayoutTimes = minLayoutTimes;
+            checkValid();
+        }
+
+        void checkValid() {
+            if (layout == null)
+                throw new NullPointerException("layout must not be null!");
+            if (tag == null)
+                throw new NullPointerException("tag must not be null!");
+            if (extractInfo < 0)
+                throw new IllegalArgumentException("extract info is invalid!");
+            if (minLayoutTimes < 0)
+                throw new IllegalArgumentException("minLayoutTimes is invalid!");
+        }
+
+        @Override
+        public String toString() {
+            return layout + " info: " + extractInfo + " " + tag;
         }
     }
 
