@@ -18,6 +18,7 @@ import android.view.ViewConfiguration;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import xfy.fakeview.library.DebugInfo;
 import xfy.fakeview.library.fview.utils.FMeasureSpec;
 import xfy.fakeview.library.fview.utils.FViewDebugTool;
 import xfy.fakeview.library.fview.utils.ViewUtils;
@@ -26,21 +27,11 @@ import xfy.fakeview.library.fview.utils.ViewUtils;
  * Created by XiongFangyu on 2017/11/7.
  *
  * 基础View
- * 可通过{@link #setDebug(boolean)}打开debug开关
  *
  * FView只有一种构造方法，传入{@link Context}和{@link IFViewRoot}
  */
 public class FView implements IFView, Drawable.Callback{
     protected static final String TAG = "FView-----";
-    /**
-     * debug开关
-     * true: 绘制Fview轮廓
-     * @see #setDebug(boolean)
-     */
-    protected static boolean DEBUG = false;
-    public static void setDebug(boolean debug) {
-        DEBUG = debug;
-    }
 
     protected Context mContext;
     /**
@@ -100,7 +91,6 @@ public class FView implements IFView, Drawable.Callback{
     /**
      * debug模式下绘制边框工具
      * @see #DEBUG
-     * @see #setDebug(boolean)
      */
     private FViewDebugTool debugTool;
 
@@ -286,7 +276,7 @@ public class FView implements IFView, Drawable.Callback{
         }
         onDraw(canvas);
         dispatchDraw(canvas);
-        if (DEBUG)
+        if (DebugInfo.DEBUG)
             debugDraw(canvas);
     }
 
@@ -890,7 +880,7 @@ public class FView implements IFView, Drawable.Callback{
     }
 
     protected void d(String tag, String log) {
-        if (DEBUG)
+        if (DebugInfo.DEBUG)
             Log.d(tag, log);
     }
 

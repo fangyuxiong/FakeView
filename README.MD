@@ -7,13 +7,15 @@ English Document.
 
 FakeView就是为了提取出日常使用较多，且容易造成layout层级过多或过度绘制而导致页面卡顿（主要是滑动卡顿）的View，经过处理后，合并层级，减少过度绘制。
 
+附带减少view层级的[工具](Tools.MD)
+
 ## 原理
 FakeView提取出在屏幕绘制一个控件最基本的动作：创建-计算-布局-绘制，并将其封装为FView和FViewGroup，分别模拟View和ViewGroup；提取出根调度器FViewRootImpl（View子类）模拟ViewRootImpl，调度"计算"、"布局"、"绘制"等动作，并将所有FView加进FViewRootImpl，实现合并图层，减少过度绘制。
 
 ## 使用方法
 gradle:
 ```
-compile "xfy.fakeview.library:fview:0.13"
+compile "xfy.fakeview.library:fview:0.14"
 ```
 直接生成FView：
 ```
@@ -105,7 +107,7 @@ private void initEvent() {
         findViewById(R.id.xxxx).setOnLongClickListener(onLongClickListener);
 }
 ```
-如需调试，可设置`FView.setDebug(true);`
+如需调试，可设置`DebugInfo.setDebug(true);`
 ## 最后
 迎提出意见及建议。
 

@@ -12,6 +12,7 @@ import android.view.View;
 import java.util.HashSet;
 import java.util.Set;
 
+import xfy.fakeview.library.DebugInfo;
 import xfy.fakeview.library.fview.utils.FMeasureSpec;
 
 /**
@@ -22,11 +23,6 @@ import xfy.fakeview.library.fview.utils.FMeasureSpec;
  */
 public class FViewRootImpl extends View implements IFViewRoot {
     private static final String TAG = "FViewRootImpl";
-    private static boolean DEBUG = false;
-
-    public static void setDebug(boolean debug) {
-        DEBUG = debug;
-    }
 
     private FView mTargetView;
     private boolean attached = false;
@@ -250,7 +246,7 @@ public class FViewRootImpl extends View implements IFViewRoot {
     }
 
     private void d(String tag, String msg) {
-        if (DEBUG) {
+        if (DebugInfo.DEBUG) {
             Log.d(tag, msg);
         }
     }
