@@ -68,6 +68,8 @@ public class LayersMergeManager {
      */
     private int extractFlag = EXTRACT_NONE;
 
+    private OnExtractViewGroupListener onExtractViewGroupListener;
+
     /**
      * Indicate the view tree need merge
      * @param parent view tree parent
@@ -126,6 +128,21 @@ public class LayersMergeManager {
      * @param flag flag for extracting info
      */
     public LayersMergeManager(FrameLayout parent, int flag) {
+        this(parent, flag, null);
+    }
+
+    /**
+     * Constructor for this manager
+     *
+     * @param parent view tree parent.
+     *               If parent is other ViewGroup(eg. LinearLayout),
+     *               create a new FrameLayout wrapping that parent, and pass the
+     *               FrameLayout.
+     *
+     * @param flag flag for extracting info
+     * @param listener callback invoked when extracting a ViewGroup
+     */
+    public LayersMergeManager(FrameLayout parent, int flag, OnExtractViewGroupListener listener) {
         this.extractFlag = flag;
         rootLayout = parent;
         rootLoc = new Loc(getViewLocation(parent));
@@ -133,6 +150,7 @@ public class LayersMergeManager {
         rootHeight = parent.getHeight();
         childrens = new ArrayList<>();
         childrenLoc = new ArrayList<>();
+        onExtractViewGroupListener = listener;
     }
 
     /**
@@ -178,6 +196,21 @@ public class LayersMergeManager {
         for (int i = 0; i < childCount; i ++) {
             View c = parent.getChildAt(i);
             if (c instanceof ViewGroup) {
+                if (onExtractViewGroupListener != null) {
+                    OnExtractViewGroupListener.Result result = onExtractViewGroupListener.onExtract((ViewGroup) c);
+                    if (result != null) {
+                        if (!result.valid())
+                            throw new IllegalArgumentException("invalid result: " + result);
+                        final View[] views = result.views;
+                        final Loc[] locs = result.locs;
+                        for (int j = 0, vl = views.length; j < vl; j ++) {
+                            childrens.add(views[j]);
+                            childrenLoc.add(locs[j]);
+                        }
+                        if (result.handle)
+                            continue;
+                    }
+                }
                 View backgroundHolder = createViewByExtractingFlag((ViewGroup) c);
                 if (backgroundHolder != null) {
                     childrens.add(backgroundHolder);
@@ -242,11 +275,10 @@ public class LayersMergeManager {
     /**
      * Save view location
      */
-    static class Loc {
+    public static class Loc {
         int left, top;
-        Loc() {}
 
-        Loc(int[] loc) {
+        public Loc(int[] loc) {
             left = loc[0];
             top = loc[1];
         }
