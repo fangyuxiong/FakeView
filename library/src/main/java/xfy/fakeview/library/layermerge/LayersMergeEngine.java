@@ -1,6 +1,5 @@
 package xfy.fakeview.library.layermerge;
 
-import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
@@ -221,22 +220,17 @@ public class LayersMergeEngine {
             if (layout == null || layout.layout == null)
                 return;
             //check the view has been through one layout
-            boolean canMerge = false;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                canMerge = layout.layout.isLaidOut();
-            } else {
-                canMerge = !layout.layout.isLayoutRequested();
-            }
+            final FrameLayout src = layout.layout;
+            boolean canMerge = src.getLeft() != 0 || src.getTop() != 0 || src.getRight() != 0 || src.getBottom() != 0;
             if (DebugInfo.DEBUG) {
-                Log.d(TAG, "run action: " + layout + " canMerge: " + canMerge +
-                        " is kitkat: " + (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT));
+                Log.d(TAG, "run action: " + layout + " canMerge: " + canMerge);
             }
             //if not, add merge action and schedule next
             if (!canMerge) {
                 mergingLayoutHashcode = -1;
                 merging = false;
                 if (!removeTags.contains(layout.tag)) {
-                    addMergeAction(layout.tag, layout.layout, layout.extractInfo);
+                    addMergeAction(layout.tag, src, layout.extractInfo);
                 } else {
                     removeTags.remove(layout.tag);
                 }
@@ -247,7 +241,7 @@ public class LayersMergeEngine {
             mainHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    LayersMergeManager manager = new LayersMergeManager(layout.layout, layout.extractInfo);
+                    LayersMergeManager manager = new LayersMergeManager(src, layout.extractInfo);
                     manager.mergeChildrenLayers();
                     synchronized (lock) {
                         lock.notifyAll();
@@ -280,6 +274,11 @@ public class LayersMergeEngine {
             this.tag = tag;
             this.layout = layout;
             this.extractInfo = extractInfo;
+        }
+
+        @Override
+        public String toString() {
+            return layout + " info: " + extractInfo + " " + tag;
         }
     }
 
