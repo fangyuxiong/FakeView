@@ -4,6 +4,7 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
 import android.util.Log;
+import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
 import java.util.ArrayList;
@@ -26,7 +27,7 @@ import xfy.fakeview.library.DebugInfo;
  * @see #removeMergeActionByTag(Object)
  * @see #removeAllAction()
  */
-public class LayersMergeEngine {
+public class LayersMergeEngine implements OnExtractViewGroupListener{
     private static final String TAG = "LayersMergeEngine";
     private static volatile LayersMergeEngine engine;
     private static final int DELAY = 16;
@@ -57,6 +58,7 @@ public class LayersMergeEngine {
     private int mergingLayoutHashcode = -1;
     private boolean merging = false;
     private final ArrayList<Object> removeTags;
+    private ArrayList<OnExtractViewGroupListener> onExtractViewGroupListeners;
 
     public synchronized void pause() {
         mPause = true;
@@ -161,6 +163,27 @@ public class LayersMergeEngine {
         mergeActions.clear();
     }
 
+    public void addOnExtractViewGroupListener(OnExtractViewGroupListener listener) {
+        if (onExtractViewGroupListeners == null) {
+            onExtractViewGroupListeners = new ArrayList<>();
+        }
+        if (!onExtractViewGroupListeners.contains(listener)) {
+            onExtractViewGroupListeners.add(listener);
+        }
+    }
+
+    public void removeOnExtractViewGroupListener(OnExtractViewGroupListener listener) {
+        if (onExtractViewGroupListeners != null) {
+            onExtractViewGroupListeners.remove(listener);
+        }
+    }
+
+    public void clearOnExtractViewGroupListener() {
+        if (onExtractViewGroupListeners != null) {
+            onExtractViewGroupListeners.clear();
+        }
+    }
+
     /**
      * Schedule next action.
      */
@@ -223,6 +246,20 @@ public class LayersMergeEngine {
         }
     }
 
+    @Override
+    public Result onExtract(ViewGroup src) {
+        if (onExtractViewGroupListeners != null) {
+            ArrayList<OnExtractViewGroupListener> temp = new ArrayList<>(onExtractViewGroupListeners);
+            for (int i = 0, l = temp.size(); i < l ; i ++) {
+                OnExtractViewGroupListener listener = temp.get(i);
+                Result result = listener.onExtract(src);
+                if (result != null && result.valid())
+                    return result;
+            }
+        }
+        return null;
+    }
+
     private class NextAction implements Runnable {
         @Override
         public void run() {
@@ -239,6 +276,9 @@ public class LayersMergeEngine {
         Action(LayoutData layout) {
             this.layout = layout;
             lock = new Object();
+            if (layout.onExtractViewGroupListener == null) {
+                layout.onExtractViewGroupListener = LayersMergeEngine.this;
+            }
         }
         @Override
         public void run() {
@@ -248,6 +288,7 @@ public class LayersMergeEngine {
             final FrameLayout src = layout.layout;
             final Object tag = layout.tag;
             final int info = layout.extractInfo;
+            final OnExtractViewGroupListener listener = layout.onExtractViewGroupListener;
             boolean canMerge = checkCanMerge();
             if (DebugInfo.DEBUG) {
                 Log.d(TAG, "run action: " + layout + " canMerge: " + canMerge);
@@ -270,7 +311,7 @@ public class LayersMergeEngine {
                 @Override
                 public void run() {
                     if (!removeTags.contains(tag)) {
-                        LayersMergeManager manager = new LayersMergeManager(src, info);
+                        LayersMergeManager manager = new LayersMergeManager(src, info, listener);
                         manager.mergeChildrenLayers();
                     }
                     synchronized (lock) {
@@ -313,6 +354,7 @@ public class LayersMergeEngine {
         int extractInfo = 0;
         Object tag;
         int maxFailTimes = 0;
+        OnExtractViewGroupListener onExtractViewGroupListener;
 
         int failTimes = 0;
 
@@ -321,10 +363,15 @@ public class LayersMergeEngine {
         }
 
         public LayoutData(Object tag, FrameLayout layout, int extractInfo, int maxFailTimes) {
+            this(tag, layout, extractInfo, maxFailTimes, null);
+        }
+
+        public LayoutData(Object tag, FrameLayout layout, int extractInfo, int maxFailTimes, OnExtractViewGroupListener listener) {
             this.tag = tag;
             this.layout = layout;
             this.extractInfo = extractInfo;
             this.maxFailTimes = maxFailTimes;
+            onExtractViewGroupListener = listener;
             checkValid();
         }
 
