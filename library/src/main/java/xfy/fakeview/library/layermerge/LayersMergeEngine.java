@@ -106,8 +106,21 @@ public class LayersMergeEngine {
      * @return true: add to scheduler, false otherwise
      */
     public boolean addMergeAction(Object tag, FrameLayout layout, int extractInfo) {
+        return addMergeAction(new LayoutData(tag, layout, extractInfo));
+    }
+
+    /**
+     * Add a merge action
+     *
+     * @param layoutData contain layout, tag, extract info etc..
+     *                   @see LayoutData
+     * @return true: add to scheduler, false otherwise
+     */
+    public boolean addMergeAction(LayoutData layoutData) {
+        final FrameLayout layout = layoutData.layout;
         if (!LayersMergeManager.needMerge(layout))
             return false;
+        final Object tag = layoutData.tag;
         removeTags.remove(tag);
         ArrayList<LayoutData> list = mergeActions.get(tag);
         if (list == null) {
@@ -116,7 +129,7 @@ public class LayersMergeEngine {
         }
         if (list.contains(layout) || layout.hashCode() == mergingLayoutHashcode)
             return true;
-        list.add(new LayoutData(tag, layout, extractInfo));
+        list.add(layoutData);
         if (!merging)
             mScheduler.post(new NextAction());
         return true;
@@ -235,7 +248,7 @@ public class LayersMergeEngine {
             final FrameLayout src = layout.layout;
             final Object tag = layout.tag;
             final int info = layout.extractInfo;
-            boolean canMerge = src.getLeft() != 0 || src.getTop() != 0 || src.getRight() != 0 || src.getBottom() != 0;
+            boolean canMerge = checkCanMerge();
             if (DebugInfo.DEBUG) {
                 Log.d(TAG, "run action: " + layout + " canMerge: " + canMerge);
             }
@@ -244,7 +257,7 @@ public class LayersMergeEngine {
                 mergingLayoutHashcode = -1;
                 merging = false;
                 if (!removeTags.contains(tag)) {
-                    addMergeAction(tag, src, info);
+                    addMergeAction(layout);
                 } else {
                     removeTags.remove(tag);
                 }
@@ -280,17 +293,50 @@ public class LayersMergeEngine {
             merging = false;
             mScheduler.postDelay(new NextAction(), DELAY);
         }
+
+        private boolean checkCanMerge() {
+            boolean laidout = checkViewIsLaidOut();
+            if (laidout) {
+                layout.laidOutTimes ++;
+            }
+            return layout.laidOutTimes >= layout.minLayoutTimes;
+        }
+
+        private boolean checkViewIsLaidOut() {
+            final FrameLayout src = layout.layout;
+            return src.getLeft() != 0 || src.getTop() != 0 || src.getRight() != 0 || src.getBottom() != 0;
+        }
     }
 
-    private static class LayoutData {
+    public static class LayoutData {
         FrameLayout layout;
         int extractInfo = 0;
         Object tag;
+        int minLayoutTimes = 0;
 
-        LayoutData(Object tag, FrameLayout layout, int extractInfo) {
+        int laidOutTimes = 0;
+
+        public LayoutData(Object tag, FrameLayout layout, int extractInfo) {
+            this(tag, layout, extractInfo, 2);
+        }
+
+        public LayoutData(Object tag, FrameLayout layout, int extractInfo, int minLayoutTimes) {
             this.tag = tag;
             this.layout = layout;
             this.extractInfo = extractInfo;
+            this.minLayoutTimes = minLayoutTimes;
+            checkValid();
+        }
+
+        void checkValid() {
+            if (layout == null)
+                throw new NullPointerException("layout must not be null!");
+            if (tag == null)
+                throw new NullPointerException("tag must not be null!");
+            if (extractInfo < 0)
+                throw new IllegalArgumentException("extract info is invalid!");
+            if (minLayoutTimes < 0)
+                throw new IllegalArgumentException("minLayoutTimes is invalid!");
         }
 
         @Override
