@@ -53,7 +53,7 @@ public class TestMergeLayersActivity extends Activity implements View.OnClickLis
             manager1.mergeChildrenLayers();
         }
         if (manager2 == null) {
-            manager2 = new LayersMergeManager(mergeLayout2, true);
+            manager2 = new LayersMergeManager(mergeLayout2, LayersMergeManager.EXTRACT_BACKGROUND);
             manager2.mergeChildrenLayers();
         }
         if (manager3 == null) {

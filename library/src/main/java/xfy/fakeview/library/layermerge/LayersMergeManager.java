@@ -8,6 +8,8 @@ import android.widget.FrameLayout;
 
 import java.util.ArrayList;
 
+import xfy.fakeview.library.translator.EventExtractor;
+
 /**
  * Created by XiongFangyu on 2017/11/10.
  *
@@ -25,14 +27,46 @@ import java.util.ArrayList;
  * </code>
  */
 public class LayersMergeManager {
+    /**
+     * Only extracting children view
+     */
+    public static final int EXTRACT_NONE                = 0;
+    /**
+     * Extracting ViewGroup contain background.
+     */
+    public static final int EXTRACT_BACKGROUND          = 0x00000001;
+    /**
+     * Extracting ViewGroup contain click event.
+     */
+    public static final int EXTRACT_CLICK_EVENT         = 0x00000010;
+    /**
+     * Extracting ViewGroup contain long click event.
+     */
+    public static final int EXTRACT_LONG_CLICK_EVENT    = 0x00000100;
+    /**
+     * Extracting ViewGroup contain click event or long click event
+     */
+    public static final int EXTRACT_ALL_EVENT           = EXTRACT_CLICK_EVENT | EXTRACT_LONG_CLICK_EVENT;
+    /**
+     * Extracting ViewGroup contain background or event
+     */
+    public static final int EXTRACT_ALL                 = EXTRACT_BACKGROUND | EXTRACT_ALL_EVENT;
+
     private FrameLayout rootLayout;
     private Loc rootLoc;
     private int rootWidth, rootHeight;
 
     private ArrayList<View> childrens;
     private ArrayList<Loc> childrenLoc;
-
-    private boolean extractBackgroundView = false;
+    /**
+     * Flag for extracting info.
+     *
+     * @see #EXTRACT_NONE
+     * @see #EXTRACT_BACKGROUND
+     * @see #EXTRACT_CLICK_EVENT
+     * @see #EXTRACT_LONG_CLICK_EVENT
+     */
+    private int extractFlag = EXTRACT_NONE;
 
     /**
      * Indicate the view tree need merge
@@ -57,7 +91,7 @@ public class LayersMergeManager {
      *               FrameLayout.
      */
     public LayersMergeManager(FrameLayout parent) {
-        this(parent, false);
+        this(parent, EXTRACT_NONE);
     }
 
     /**
@@ -68,10 +102,10 @@ public class LayersMergeManager {
      *               create a new FrameLayout wrapping that parent, and pass the
      *               FrameLayout.
      *
-     * @param createBackgroundView when a viewgroup has background, create a new view for it.
+     * @param flag flag for extracting info
      */
-    public LayersMergeManager(FrameLayout parent, boolean createBackgroundView) {
-        this.extractBackgroundView = createBackgroundView;
+    public LayersMergeManager(FrameLayout parent, int flag) {
+        this.extractFlag = flag;
         rootLayout = parent;
         rootLoc = new Loc(getViewLocation(parent));
         rootWidth = parent.getWidth();
@@ -123,7 +157,7 @@ public class LayersMergeManager {
         for (int i = 0; i < childCount; i ++) {
             View c = parent.getChildAt(i);
             if (c instanceof ViewGroup) {
-                View backgroundHolder = createViewForBackground((ViewGroup) c);
+                View backgroundHolder = createViewByExtractingFlag((ViewGroup) c);
                 if (backgroundHolder != null) {
                     childrens.add(backgroundHolder);
                     childrenLoc.add(new Loc(getViewLocation(c)));
@@ -137,28 +171,45 @@ public class LayersMergeManager {
         parent.removeAllViews();
     }
 
-    /**
-     * If extractBackgroundView is true, and view contain a background,
-     * create a new View for holding the background.
-     * @param src src view
-     * @return view holding background or src; or null
-     */
-    private View createViewForBackground(ViewGroup src) {
-        if (extractBackgroundView) {
+    private View createViewByExtractingFlag(ViewGroup src) {
+        final int flag = extractFlag;
+        if (flag == EXTRACT_NONE)
+            return null;
+        View result = null;
+        if ((flag & EXTRACT_BACKGROUND) == EXTRACT_BACKGROUND) {
             Drawable background = src.getBackground();
-            if (background == null)
-                return null;
-            View backgroundHolder = new View(src.getContext());
-            ViewGroup.LayoutParams params = new ViewGroup.LayoutParams(src.getWidth(), src.getHeight());
-            backgroundHolder.setLayoutParams(params);
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-                backgroundHolder.setBackground(background);
-            } else {
-                backgroundHolder.setBackgroundDrawable(background);
+            if (background != null) {
+                result = createHolderViewForViewGroup(src);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                    result.setBackground(background);
+                } else {
+                    result.setBackgroundDrawable(background);
+                }
             }
-            return backgroundHolder;
         }
-        return null;
+        if ((flag & EXTRACT_CLICK_EVENT) == EXTRACT_CLICK_EVENT) {
+            View.OnClickListener clickListener = EventExtractor.getViewOnClickListener(src);
+            if (clickListener != null) {
+                result = result == null ? createHolderViewForViewGroup(src) : result;
+                result.setOnClickListener(clickListener);
+            }
+        }
+        if ((flag & EXTRACT_LONG_CLICK_EVENT) == EXTRACT_LONG_CLICK_EVENT) {
+            View.OnLongClickListener longClickListener = EventExtractor.getViewOnLongClickListener(src);
+            if (longClickListener != null) {
+                result = result == null ? createHolderViewForViewGroup(src) : result;
+                result.setOnLongClickListener(longClickListener);
+            }
+        }
+        return result;
+    }
+
+    private View createHolderViewForViewGroup(ViewGroup src) {
+        View holder = new View(src.getContext());
+        ViewGroup.LayoutParams params = new ViewGroup.LayoutParams(src.getWidth(), src.getHeight());
+        holder.setLayoutParams(params);
+        holder.setId(src.getId());
+        return holder;
     }
 
     private static int[] getViewLocation(View view) {

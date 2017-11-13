@@ -8,8 +8,8 @@ import android.view.ViewGroup;
 import android.view.ViewParent;
 
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
 
+import xfy.fakeview.library.DebugInfo;
 import xfy.fakeview.library.fview.FView;
 import xfy.fakeview.library.fview.FViewParent;
 import xfy.fakeview.library.fview.FViewRootImpl;
@@ -34,29 +34,9 @@ import xfy.fakeview.library.translator.event.OnLongClickListener;
  */
 public class TranslatorManager {
     private static final String TAG = "TranslatorManager";
-    /**
-     * debug mode
-     * true:
-     *  when translating failed, throw Exception.
-     * @see #setDebug(boolean)
-     */
-    private static boolean DEBUG = false;
-    public static void setDebug(boolean debug) {
-        DEBUG = debug;
-    }
-    private static Field mListenerInfoField;
-    private static Field mOnClickListenerField, mOnLongClickListenerField;
+
     private Context mContext;
     private FViewRootImpl viewRoot;
-
-    static {
-        try {
-            mListenerInfoField = View.class.getDeclaredField("mListenerInfo");
-            mListenerInfoField.setAccessible(true);
-        } catch (Throwable e) {
-            mListenerInfoField = null;
-        }
-    }
 
     public TranslatorManager(Context context) {
         mContext = context;
@@ -78,7 +58,7 @@ public class TranslatorManager {
             throw new IllegalArgumentException("view must be added to view tree");
         }
         if (!FViewTranslator.canBeTranslated(target.getClass())) {
-            if (DEBUG) {
+            if (DebugInfo.DEBUG) {
                 throw new IllegalArgumentException("view " + target.getClass().getName() +
                         " cannot be translated. please register by invoke FViewTranslator.registerTranslator()");
             }
@@ -116,7 +96,7 @@ public class TranslatorManager {
     private void translateViewTree(View target, FViewParent parent) {
         Class<? extends FView> tran = FViewTranslator.getTranslateClass(target.getClass());
         if (tran == null) {
-            if (DEBUG) {
+            if (DebugInfo.DEBUG) {
                 throw new IllegalArgumentException("view " + target.getClass().getName() +
                     " cannot be translated. please register by invoke FViewTranslator.registerTranslator()");
             }
@@ -124,7 +104,7 @@ public class TranslatorManager {
         }
         FView fView = newFView(tran);
         if (fView == null) {
-            if (DEBUG) {
+            if (DebugInfo.DEBUG) {
                 throw new IllegalArgumentException("class " + tran.getName() +
                     " does not have the public constructor with 2 params (Context, IFViewRoot).");
             }
@@ -152,7 +132,7 @@ public class TranslatorManager {
             }
         } else {
             if (!DataTranslatorManager.translateData(fView, target)) {
-                if (DEBUG) {
+                if (DebugInfo.DEBUG) {
                     throw new IllegalArgumentException("view " + target.getClass().getName() +
                             " cannot be translated to " + tran.getName());
                 }
@@ -167,8 +147,8 @@ public class TranslatorManager {
      * @param src source view
      */
     private void translateEvent(FView fView, View src) {
-        fView.setOnClickListener(FViewOnClickListener.craete(getViewOnClickListener(src)));
-        fView.setOnLongClickListener(FViewOnLongClickListener.create(getViewOnLongClickListener(src)));
+        fView.setOnClickListener(FViewOnClickListener.craete(EventExtractor.getViewOnClickListener(src)));
+        fView.setOnLongClickListener(FViewOnLongClickListener.create(EventExtractor.getViewOnLongClickListener(src)));
     }
 
     /**
@@ -229,52 +209,6 @@ public class TranslatorManager {
     }
 
     /**
-     * Get View's OnClickListener by reflect
-     * @param target target View
-     * @return null if target View has no OnClickListener or error occur,
-     *          othrewise OnClickListener object will be return.
-     */
-    public static View.OnClickListener getViewOnClickListener(View target) {
-        try {
-            Object mListenerInfo = mListenerInfoField.get(target);
-            if (mListenerInfo == null)
-                return null;
-            if (mOnClickListenerField == null) {
-                Class clz = mListenerInfo.getClass();
-                mOnClickListenerField = clz.getDeclaredField("mOnClickListener");
-                mOnClickListenerField.setAccessible(true);
-            }
-            return (View.OnClickListener) mOnClickListenerField.get(mListenerInfo);
-        } catch (Throwable e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-    /**
-     * Get View's OnLongClickListener by reflect
-     * @param target target View
-     * @return null if target View has no OnLongClickListener or error occur,
-     *          otherwise OnLongClickListener object will be return.
-     */
-    public static View.OnLongClickListener getViewOnLongClickListener(View target) {
-        try {
-            Object mListenerInfo = mListenerInfoField.get(target);
-            if (mListenerInfo == null)
-                return null;
-            if (mOnLongClickListenerField == null) {
-                Class clz = mListenerInfo.getClass();
-                mOnLongClickListenerField = clz.getDeclaredField("mOnLongClickListener");
-                mOnLongClickListenerField.setAccessible(true);
-            }
-            return (View.OnLongClickListener) mOnLongClickListenerField.get(mListenerInfo);
-        } catch (Throwable e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-    /**
      * Implement of FView OnClickListener.
      *
      * When click event callback, callback old View click listener,
@@ -284,7 +218,7 @@ public class TranslatorManager {
     private static class FViewOnClickListener implements IFView.OnClickListener {
         static FViewOnClickListener craete(View.OnClickListener l) {
             if (l == null) {
-                if (DEBUG) {
+                if (DebugInfo.DEBUG) {
                     Log.d(TAG, "onclicklistener is null!");
                 }
                 return null;
@@ -317,7 +251,7 @@ public class TranslatorManager {
     private static class FViewOnLongClickListener implements IFView.OnLongClickListener {
         static FViewOnLongClickListener create(View.OnLongClickListener l) {
             if (l == null) {
-                if (DEBUG) {
+                if (DebugInfo.DEBUG) {
                     Log.d(TAG, "OnLongClickListener is null!");
                 }
                 return null;
@@ -340,7 +274,7 @@ public class TranslatorManager {
     }
 
     private static void d(String msg) {
-        if (DEBUG) {
+        if (DebugInfo.DEBUG) {
             Log.d(TAG, msg);
         }
     }

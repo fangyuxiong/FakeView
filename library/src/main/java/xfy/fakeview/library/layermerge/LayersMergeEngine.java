@@ -1,5 +1,6 @@
 package xfy.fakeview.library.layermerge;
 
+import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
@@ -10,15 +11,24 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Set;
 
+import xfy.fakeview.library.DebugInfo;
+
 /**
  * Created by XiongFangyu on 2017/11/10.
+ *
+ * An Engine for merging layers, which can be paused.
+ * Usually this is used in a list view(ListView or RecyclerView),
+ * pause mergine when list view is scrolling.
+ *
+ * @see #pause()
+ * @see #resume()
+ * @see #addMergeAction(Object, FrameLayout)
+ * @see #addMergeAction(Object, FrameLayout, int)
+ * @see #removeMergeActionByTag(Object)
+ * @see #removeAllAction()
  */
 public class LayersMergeEngine {
     private static final String TAG = "LayersMergeEngine";
-    private static boolean DEBUG = false;
-    public static void setDebug(boolean debug) {
-        DEBUG = debug;
-    }
     private static volatile LayersMergeEngine engine;
 
     private LayersMergeEngine() {
@@ -56,11 +66,32 @@ public class LayersMergeEngine {
             mScheduler.post(new NextAction());
     }
 
+    /**
+     * Add a merge action with none extracing info.
+     *
+     * @see LayersMergeManager#extractFlag
+     *
+     * @param tag for searching this action
+     *            @see #removeMergeActionByTag(Object)
+     * @param layout needed to merging
+     * @return true: add to scheduler, false otherwise
+     */
     public boolean addMergeAction(Object tag, FrameLayout layout) {
-        return addMergeAction(tag, layout, false);
+        return addMergeAction(tag, layout, 0);
     }
 
-    public boolean addMergeAction(Object tag, FrameLayout layout, boolean createBackgroundView) {
+    /**
+     * Add a merge action with custom extracting info.
+     *
+     * @see LayersMergeManager#extractFlag
+     *
+     * @param tag for searching this action
+     *            @see #removeMergeActionByTag(Object)
+     * @param layout needed to merging
+     * @param extractInfo custom extracing info
+     * @return true: add to scheduler, false otherwise
+     */
+    public boolean addMergeAction(Object tag, FrameLayout layout, int extractInfo) {
         if (!LayersMergeManager.needMerge(layout))
             return false;
         ArrayList<LayoutData> list = mergeActions.get(tag);
@@ -70,12 +101,17 @@ public class LayersMergeEngine {
         }
         if (list.contains(layout) || layout.hashCode() == mergingLayoutHashcode)
             return true;
-        list.add(new LayoutData(layout, createBackgroundView));
+        list.add(new LayoutData(tag, layout, extractInfo));
         if (!merging)
             mScheduler.post(new NextAction());
         return true;
     }
 
+    /**
+     * Remove merge action by tag.
+     * If action is processing, it cannot be removed.
+     * @param tag for searching this action
+     */
     public synchronized void removeMergeActionByTag(Object tag) {
         ArrayList<LayoutData> list = mergeActions.remove(tag);
         if (list == null)
@@ -83,6 +119,9 @@ public class LayersMergeEngine {
         list.clear();
     }
 
+    /**
+     * Remove all unprocessing merge actions.
+     */
     public synchronized void removeAllAction() {
         for (Object k : mergeActions.keySet()) {
             ArrayList<LayoutData> list = mergeActions.get(k);
@@ -92,16 +131,19 @@ public class LayersMergeEngine {
         mergeActions.clear();
     }
 
+    /**
+     * Schedule next action.
+     */
     private synchronized void scheduleNext() {
         if (mPause || merging || mergeActions.isEmpty()) {
-            if (DEBUG) {
+            if (DebugInfo.DEBUG) {
                 Log.d(TAG, "merging: " + merging + " pause: " + mPause + " or empty");
             }
             return;
         }
         Set<Object> keys = mergeActions.keySet();
         if (keys.isEmpty()) {
-            if (DEBUG)
+            if (DebugInfo.DEBUG)
                 Log.d(TAG, "keys is empty");
             return;
         }
@@ -124,7 +166,7 @@ public class LayersMergeEngine {
             }
         }
         if (layoutData == null) {
-            if (DEBUG) {
+            if (DebugInfo.DEBUG) {
                 Log.d(TAG, "no layout to merge");
             }
             return;
@@ -138,7 +180,7 @@ public class LayersMergeEngine {
             mergingLayoutHashcode = layoutData.hashCode();
             merging = true;
         } else {
-            if (DEBUG) {
+            if (DebugInfo.DEBUG) {
                 Log.d(TAG, "have not created handler yet");
             }
             mScheduler.post(new NextAction());
@@ -152,6 +194,9 @@ public class LayersMergeEngine {
         }
     }
 
+    /**
+     * Merge action
+     */
     private class Action implements Runnable {
         Object lock;
         LayoutData layout;
@@ -163,22 +208,36 @@ public class LayersMergeEngine {
         public void run() {
             if (layout == null || layout.layout == null)
                 return;
-            if (DEBUG) {
-                Log.d(TAG, "run action: " + layout);
+            //check the view has been through one layout
+            boolean canMerge = false;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                canMerge = layout.layout.isLaidOut();
+            } else {
+                canMerge = !layout.layout.isLayoutRequested();
             }
+            if (DebugInfo.DEBUG) {
+                Log.d(TAG, "run action: " + layout + " canMerge: " + canMerge);
+            }
+            //if not, add merge action and schedule next
+            if (!canMerge) {
+                mergingLayoutHashcode = -1;
+                merging = false;
+                addMergeAction(layout.tag, layout.layout, layout.extractInfo);
+                mScheduler.postDelay(new NextAction(), 1);
+                return;
+            }
+            //do merge action by LayersMergeManager in main thread.
             mainHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    if (DEBUG) {
-                        Log.d(TAG, "real run action: " + layout);
-                    }
-                    LayersMergeManager manager = new LayersMergeManager(layout.layout, layout.extracting);
+                    LayersMergeManager manager = new LayersMergeManager(layout.layout, layout.extractInfo);
                     manager.mergeChildrenLayers();
                     synchronized (lock) {
                         lock.notifyAll();
                     }
                 }
             });
+            //wait for merge action
             synchronized (lock) {
                 try {
                     lock.wait();
@@ -186,7 +245,7 @@ public class LayersMergeEngine {
                     e.printStackTrace();
                 }
             }
-            if (DEBUG) {
+            if (DebugInfo.DEBUG) {
                 Log.d(TAG, "action done: " + layout);
             }
             mergingLayoutHashcode = -1;
@@ -197,10 +256,13 @@ public class LayersMergeEngine {
 
     private static class LayoutData {
         FrameLayout layout;
-        boolean extracting = false;
-        LayoutData(FrameLayout layout, boolean extracting) {
+        int extractInfo = 0;
+        Object tag;
+
+        LayoutData(Object tag, FrameLayout layout, int extractInfo) {
+            this.tag = tag;
             this.layout = layout;
-            this.extracting = extracting;
+            this.extractInfo = extractInfo;
         }
     }
 

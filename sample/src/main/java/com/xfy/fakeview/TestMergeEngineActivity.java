@@ -4,12 +4,15 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
+import xfy.fakeview.library.DebugInfo;
 import xfy.fakeview.library.layermerge.LayersMergeEngine;
+import xfy.fakeview.library.layermerge.LayersMergeManager;
 
 public class TestMergeEngineActivity extends Activity {
     private int tag;
@@ -21,7 +24,7 @@ public class TestMergeEngineActivity extends Activity {
 
         recyclerView = (RecyclerView) findViewById(R.id.recycler);
         tag = hashCode();
-        LayersMergeEngine.setDebug(true);
+        DebugInfo.setDebug(true);
         recyclerView.setAdapter(new Adapter(30));
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
@@ -48,8 +51,14 @@ public class TestMergeEngineActivity extends Activity {
         }
 
         @Override
-        public void onBindViewHolder(final VH holder, int position) {
-            LayersMergeEngine.getEngine().addMergeAction(tag, (FrameLayout) holder.itemView, false);
+        public void onBindViewHolder(final VH holder, final int position) {
+            holder.itemView.findViewById(R.id.linear_container).setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Log.i("vh", "onclick " + position + " " + v);
+                }
+            });
+            LayersMergeEngine.getEngine().addMergeAction(tag, (FrameLayout) holder.itemView, LayersMergeManager.EXTRACT_ALL);
         }
 
         @Override
