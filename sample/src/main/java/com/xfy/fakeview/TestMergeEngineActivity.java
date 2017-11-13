@@ -2,6 +2,7 @@ package com.xfy.fakeview;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -17,6 +18,8 @@ import xfy.fakeview.library.layermerge.LayersMergeManager;
 public class TestMergeEngineActivity extends Activity {
     private int tag;
     RecyclerView recyclerView;
+    private Handler handler;
+    private Runnable runnable;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -25,7 +28,8 @@ public class TestMergeEngineActivity extends Activity {
         recyclerView = (RecyclerView) findViewById(R.id.recycler);
         tag = hashCode();
         DebugInfo.setDebug(true);
-        recyclerView.setAdapter(new Adapter(30));
+        final Adapter adapter = new Adapter(10);
+        recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
@@ -37,6 +41,23 @@ public class TestMergeEngineActivity extends Activity {
                 }
             }
         });
+        handler = new Handler();
+        runnable = new Runnable() {
+            @Override
+            public void run() {
+                adapter.add(10);
+                adapter.notifyDataSetChanged();
+                handler.postDelayed(this, 1000);
+            }
+        };
+        handler.postDelayed(runnable, 1000);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        handler.removeCallbacks(runnable);
+        LayersMergeEngine.getEngine().removeMergeActionByTag(tag);
     }
 
     private class Adapter extends RecyclerView.Adapter<VH> {
@@ -56,6 +77,7 @@ public class TestMergeEngineActivity extends Activity {
                 @Override
                 public void onClick(View v) {
                     Log.i("vh", "onclick " + position + " " + v);
+                    handler.removeCallbacks(runnable);
                 }
             });
             LayersMergeEngine.getEngine().addMergeAction(tag, (FrameLayout) holder.itemView, LayersMergeManager.EXTRACT_ALL);
@@ -64,6 +86,10 @@ public class TestMergeEngineActivity extends Activity {
         @Override
         public int getItemCount() {
             return count;
+        }
+
+        public void add(int c) {
+            count += c;
         }
     }
 

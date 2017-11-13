@@ -257,7 +257,8 @@ public class LayersMergeEngine {
                 mergingLayoutHashcode = -1;
                 merging = false;
                 if (!removeTags.contains(tag)) {
-                    addMergeAction(layout);
+                    if (layout.failTimes < layout.maxFailTimes)
+                        addMergeAction(layout);
                 } else {
                     removeTags.remove(tag);
                 }
@@ -296,15 +297,14 @@ public class LayersMergeEngine {
 
         private boolean checkCanMerge() {
             boolean laidout = checkViewIsLaidOut();
-            if (laidout) {
-                layout.laidOutTimes ++;
+            if (!laidout) {
+                layout.failTimes++;
             }
-            return layout.laidOutTimes >= layout.minLayoutTimes;
+            return laidout;
         }
 
         private boolean checkViewIsLaidOut() {
-            final FrameLayout src = layout.layout;
-            return src.getLeft() != 0 || src.getTop() != 0 || src.getRight() != 0 || src.getBottom() != 0;
+            return LayersMergeManager.isReadyToMerge(layout.layout);
         }
     }
 
@@ -312,19 +312,19 @@ public class LayersMergeEngine {
         FrameLayout layout;
         int extractInfo = 0;
         Object tag;
-        int minLayoutTimes = 0;
+        int maxFailTimes = 0;
 
-        int laidOutTimes = 0;
+        int failTimes = 0;
 
         public LayoutData(Object tag, FrameLayout layout, int extractInfo) {
-            this(tag, layout, extractInfo, 2);
+            this(tag, layout, extractInfo, 3);
         }
 
-        public LayoutData(Object tag, FrameLayout layout, int extractInfo, int minLayoutTimes) {
+        public LayoutData(Object tag, FrameLayout layout, int extractInfo, int maxFailTimes) {
             this.tag = tag;
             this.layout = layout;
             this.extractInfo = extractInfo;
-            this.minLayoutTimes = minLayoutTimes;
+            this.maxFailTimes = maxFailTimes;
             checkValid();
         }
 
@@ -335,8 +335,8 @@ public class LayersMergeEngine {
                 throw new NullPointerException("tag must not be null!");
             if (extractInfo < 0)
                 throw new IllegalArgumentException("extract info is invalid!");
-            if (minLayoutTimes < 0)
-                throw new IllegalArgumentException("minLayoutTimes is invalid!");
+            if (maxFailTimes < 0)
+                throw new IllegalArgumentException("maxFailTimes is invalid!");
         }
 
         @Override
