@@ -68,6 +68,18 @@ public class LayersMergeEngine {
             mScheduler.post(new NextAction());
     }
 
+    public synchronized static void release() {
+        if (engine != null) {
+            synchronized (engine) {
+                engine.pause();
+                engine.removeAllAction();
+                engine.mScheduler.quit();
+                engine.mainHandler.removeCallbacksAndMessages(null);
+            }
+            engine = null;
+        }
+    }
+
     /**
      * Add a merge action with none extracing info.
      *
@@ -221,6 +233,8 @@ public class LayersMergeEngine {
                 return;
             //check the view has been through one layout
             final FrameLayout src = layout.layout;
+            final Object tag = layout.tag;
+            final int info = layout.extractInfo;
             boolean canMerge = src.getLeft() != 0 || src.getTop() != 0 || src.getRight() != 0 || src.getBottom() != 0;
             if (DebugInfo.DEBUG) {
                 Log.d(TAG, "run action: " + layout + " canMerge: " + canMerge);
@@ -229,31 +243,34 @@ public class LayersMergeEngine {
             if (!canMerge) {
                 mergingLayoutHashcode = -1;
                 merging = false;
-                if (!removeTags.contains(layout.tag)) {
-                    addMergeAction(layout.tag, src, layout.extractInfo);
+                if (!removeTags.contains(tag)) {
+                    addMergeAction(tag, src, info);
                 } else {
-                    removeTags.remove(layout.tag);
+                    removeTags.remove(tag);
                 }
                 mScheduler.postDelay(new NextAction(), DELAY);
                 return;
             }
             //do merge action by LayersMergeManager in main thread.
-            mainHandler.post(new Runnable() {
+            mainHandler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    LayersMergeManager manager = new LayersMergeManager(src, layout.extractInfo);
-                    manager.mergeChildrenLayers();
+                    if (!removeTags.contains(tag)) {
+                        LayersMergeManager manager = new LayersMergeManager(src, info);
+                        manager.mergeChildrenLayers();
+                    }
                     synchronized (lock) {
                         lock.notifyAll();
                     }
                 }
-            });
+            }, DELAY);
             //wait for merge action
             synchronized (lock) {
                 try {
                     lock.wait();
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    if (DebugInfo.DEBUG)
+                        e.printStackTrace();
                 }
             }
             if (DebugInfo.DEBUG) {
