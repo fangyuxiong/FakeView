@@ -30,12 +30,14 @@ import xfy.fakeview.library.DebugInfo;
 public class LayersMergeEngine {
     private static final String TAG = "LayersMergeEngine";
     private static volatile LayersMergeEngine engine;
+    private static final int DELAY = 16;
 
     private LayersMergeEngine() {
         mScheduler = new Scheduler("LayersMergeEngineScheduler");
         mScheduler.start();
         mergeActions = new HashMap<>();
         mainHandler = new Handler(Looper.getMainLooper());
+        removeTags = new ArrayList<>();
     }
 
     public static LayersMergeEngine getEngine() {
@@ -55,6 +57,7 @@ public class LayersMergeEngine {
     private boolean mPause = false;
     private int mergingLayoutHashcode = -1;
     private boolean merging = false;
+    private final ArrayList<Object> removeTags;
 
     public synchronized void pause() {
         mPause = true;
@@ -94,6 +97,7 @@ public class LayersMergeEngine {
     public boolean addMergeAction(Object tag, FrameLayout layout, int extractInfo) {
         if (!LayersMergeManager.needMerge(layout))
             return false;
+        removeTags.remove(tag);
         ArrayList<LayoutData> list = mergeActions.get(tag);
         if (list == null) {
             list = new ArrayList<>();
@@ -117,6 +121,7 @@ public class LayersMergeEngine {
         if (list == null)
             return;
         list.clear();
+        removeTags.add(tag);
     }
 
     /**
@@ -128,6 +133,7 @@ public class LayersMergeEngine {
             if (list != null)
                 list.clear();
         }
+        removeTags.addAll(mergeActions.keySet());
         mergeActions.clear();
     }
 
@@ -146,6 +152,12 @@ public class LayersMergeEngine {
             if (DebugInfo.DEBUG)
                 Log.d(TAG, "keys is empty");
             return;
+        }
+        if (!removeTags.isEmpty()) {
+            for (Object tag : removeTags) {
+                mergeActions.remove(tag);
+            }
+            removeTags.clear();
         }
         LayoutData layoutData = null;
         ArrayList<LayoutData> list = null;
@@ -216,14 +228,19 @@ public class LayersMergeEngine {
                 canMerge = !layout.layout.isLayoutRequested();
             }
             if (DebugInfo.DEBUG) {
-                Log.d(TAG, "run action: " + layout + " canMerge: " + canMerge);
+                Log.d(TAG, "run action: " + layout + " canMerge: " + canMerge +
+                        " is kitkat: " + (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT));
             }
             //if not, add merge action and schedule next
             if (!canMerge) {
                 mergingLayoutHashcode = -1;
                 merging = false;
-                addMergeAction(layout.tag, layout.layout, layout.extractInfo);
-                mScheduler.postDelay(new NextAction(), 1);
+                if (!removeTags.contains(layout.tag)) {
+                    addMergeAction(layout.tag, layout.layout, layout.extractInfo);
+                } else {
+                    removeTags.remove(layout.tag);
+                }
+                mScheduler.postDelay(new NextAction(), DELAY);
                 return;
             }
             //do merge action by LayersMergeManager in main thread.
@@ -250,7 +267,7 @@ public class LayersMergeEngine {
             }
             mergingLayoutHashcode = -1;
             merging = false;
-            mScheduler.postDelay(new NextAction(), 1);
+            mScheduler.postDelay(new NextAction(), DELAY);
         }
     }
 
