@@ -11,9 +11,10 @@ import android.widget.Toast;
 import xfy.fakeview.library.fview.IFView;
 import xfy.fakeview.library.fview.IFViewRoot;
 import xfy.fakeview.library.fview.IView;
+import xfy.fakeview.library.translator.TranslatorAndLayersMergeManager;
+import xfy.fakeview.library.translator.TranslatorManager;
 import xfy.fakeview.library.translator.event.OnClickListener;
 import xfy.fakeview.library.translator.event.OnLongClickListener;
-import xfy.fakeview.library.translator.TranslatorManager;
 
 public class TestTranslateActivity extends Activity implements OnClickListener.Trans, OnLongClickListener.Trans{
 
@@ -41,7 +42,7 @@ public class TestTranslateActivity extends Activity implements OnClickListener.T
         t2.setOnLongClickListener(onLongClickListener);
 
         long mill = System.currentTimeMillis();
-        TranslatorManager translatorManager = new TranslatorManager(this);
+        TranslatorManager translatorManager = new TranslatorAndLayersMergeManager(this);
         final ViewGroup container = (ViewGroup) findViewById(R.id.container);
         final IFViewRoot root = translatorManager.translateView(container);
         Log.d("TestTranslateActivity", "cast: " + (System.currentTimeMillis() - mill));

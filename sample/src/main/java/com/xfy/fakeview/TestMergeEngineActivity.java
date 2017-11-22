@@ -45,9 +45,11 @@ public class TestMergeEngineActivity extends Activity {
         runnable = new Runnable() {
             @Override
             public void run() {
-                adapter.add(10);
-                adapter.notifyDataSetChanged();
-                handler.postDelayed(this, 1000);
+                if (adapter.getItemCount() <= 40) {
+                    adapter.add(10);
+                    adapter.notifyDataSetChanged();
+                    handler.postDelayed(this, 1000);
+                }
             }
         };
         handler.postDelayed(runnable, 1000);
