@@ -12,6 +12,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import xfy.fakeview.library.DebugInfo;
 import xfy.fakeview.library.FViewCreater;
 import xfy.fakeview.library.fview.IFView;
 import xfy.fakeview.library.fview.IFViewGroup;
@@ -29,6 +30,8 @@ public class MainActivity extends Activity implements IFView.OnClickListener, IF
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        DebugInfo.setDebug(true);
 
         container = (ViewGroup) findViewById(R.id.container);
         container.addView(buildFView());

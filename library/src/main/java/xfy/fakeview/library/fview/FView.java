@@ -11,6 +11,7 @@ import android.support.annotation.CallSuper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Size;
 import android.util.Log;
+import android.util.SparseArray;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
@@ -90,9 +91,22 @@ public class FView implements IFView, Drawable.Callback{
     private UnsetPressedState mUnsetPressedState;
     /**
      * debug模式下绘制边框工具
-     * @see #DEBUG
+     * @see DebugInfo#DEBUG
      */
     private FViewDebugTool debugTool;
+
+    /**
+     * The view's tag.
+     * {@hide}
+     *
+     * @see #setTag(Object)
+     * @see #getTag()
+     */
+    protected Object mTag = null;
+    /**
+     * Map used to store views' tags.
+     */
+    private SparseArray<Object> mKeyedTags;
 
     /**
      * FView
@@ -328,6 +342,28 @@ public class FView implements IFView, Drawable.Callback{
     @Override
     public int getId() {
         return mId;
+    }
+
+    @Override
+    public Object getTag() {
+        return mTag;
+    }
+
+    @Override
+    public void setTag(Object tag) {
+        mTag = tag;
+    }
+
+    @Override
+    public Object getTag(int key) {
+        return mKeyedTags != null ? mKeyedTags.get(key) : null;
+    }
+
+    @Override
+    public void setTag(int key, Object tag) {
+        if (mKeyedTags == null)
+            mKeyedTags = new SparseArray<>(2);
+        mKeyedTags.put(key, tag);
     }
 
     @Override
