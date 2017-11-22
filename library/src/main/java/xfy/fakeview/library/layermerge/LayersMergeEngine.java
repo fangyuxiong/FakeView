@@ -263,6 +263,7 @@ public class LayersMergeEngine implements OnExtractViewGroupListener{
     private class NextAction implements Runnable {
         @Override
         public void run() {
+            mScheduler.clearActions();
             scheduleNext();
         }
     }
@@ -282,37 +283,36 @@ public class LayersMergeEngine implements OnExtractViewGroupListener{
         }
         @Override
         public void run() {
-            if (layout == null || layout.layout == null)
+            if (layout == null || layout.layout == null) {
+                postNext();
                 return;
+            }
             //check the view has been through one layout
-            final FrameLayout src = layout.layout;
-            final Object tag = layout.tag;
-            final int info = layout.extractInfo;
-            final OnExtractViewGroupListener listener = layout.onExtractViewGroupListener;
             boolean canMerge = checkCanMerge();
             if (DebugInfo.DEBUG) {
                 Log.d(TAG, "run action: " + layout + " canMerge: " + canMerge);
             }
             //if not, add merge action and schedule next
             if (!canMerge) {
-                mergingLayoutHashcode = -1;
-                merging = false;
-                if (!removeTags.contains(tag)) {
-                    if (layout.failTimes < layout.maxFailTimes)
-                        addMergeAction(layout);
-                } else {
-                    removeTags.remove(tag);
-                }
-                mScheduler.postDelay(new NextAction(), DELAY);
+                onCannotMerge(true);
                 return;
             }
+            final FrameLayout src = layout.layout;
+            final Object tag = layout.tag;
+            final int info = layout.extractInfo;
+            final OnExtractViewGroupListener listener = layout.onExtractViewGroupListener;
+
             //do merge action by LayersMergeManager in main thread.
             mainHandler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
                     if (!removeTags.contains(tag)) {
-                        LayersMergeManager manager = new LayersMergeManager(src, info, listener);
-                        manager.mergeChildrenLayers();
+                        if (!checkCanMerge()) {
+                            onCannotMerge(false);
+                        } else {
+                            LayersMergeManager manager = new LayersMergeManager(src, info, listener);
+                            manager.mergeChildrenLayers();
+                        }
                     }
                     synchronized (lock) {
                         lock.notifyAll();
@@ -331,9 +331,25 @@ public class LayersMergeEngine implements OnExtractViewGroupListener{
             if (DebugInfo.DEBUG) {
                 Log.d(TAG, "action done: " + layout);
             }
+            postNext();
+        }
+
+        private void postNext() {
             mergingLayoutHashcode = -1;
             merging = false;
             mScheduler.postDelay(new NextAction(), DELAY);
+        }
+
+        private void onCannotMerge(boolean postNext) {
+            final Object tag = layout.tag;
+            if (!removeTags.contains(tag)) {
+                if (layout.failTimes < layout.maxFailTimes)
+                    addMergeAction(layout);
+            } else {
+                removeTags.remove(tag);
+            }
+            if (postNext)
+                postNext();
         }
 
         private boolean checkCanMerge() {
@@ -417,6 +433,11 @@ public class LayersMergeEngine implements OnExtractViewGroupListener{
                 return mHandler.postDelayed(action, delay);
             }
             return false;
+        }
+
+        void clearActions() {
+            if (mHandler != null)
+                mHandler.removeCallbacksAndMessages(null);
         }
 
         boolean removeAction(Runnable action) {
