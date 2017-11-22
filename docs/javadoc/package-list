@@ -1,6 +1,8 @@
 xfy.fakeview.library
 xfy.fakeview.library.fview
 xfy.fakeview.library.fview.normal
+xfy.fakeview.library.fview.utils
+xfy.fakeview.library.layermerge
 xfy.fakeview.library.translator
 xfy.fakeview.library.translator.data
 xfy.fakeview.library.translator.event
