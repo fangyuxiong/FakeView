@@ -90,19 +90,31 @@ public class LayersMergeManager {
      * @return true: ready, false otherwise
      */
     public static boolean isReadyToMerge(ViewGroup src) {
+        return isReadyToMerge(src, 0, 3);
+    }
+
+    /**
+     * Indicating the view is layout.
+     * @param src view tree parent
+     * @param zeroViewCount input 0.
+     * @param notReadyCount min fail count
+     * @return true: ready, false otherwise
+     */
+    public static boolean isReadyToMerge(ViewGroup src, int zeroViewCount, int notReadyCount) {
         final int childCount = src.getChildCount();
         for (int i = 0; i < childCount; i ++) {
+            if (zeroViewCount >= notReadyCount)
+                return false;
             View child = src.getChildAt(i);
             int[] loc = getViewLocation(child);
-            if (loc[0] != 0 || loc[1] != 0)
-                return true;
-            if (child instanceof ViewGroup) {
-                if (isReadyToMerge((ViewGroup) child)) {
-                    return true;
-                }
+            if (loc[0] == 0 && loc[1] == 0) {
+                zeroViewCount ++;
+            }
+            if (child instanceof ViewGroup && !isReadyToMerge(src, zeroViewCount, notReadyCount)) {
+                return false;
             }
         }
-        return false;
+        return true;
     }
 
     /**
