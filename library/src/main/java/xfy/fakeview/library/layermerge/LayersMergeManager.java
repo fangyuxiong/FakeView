@@ -110,7 +110,7 @@ public class LayersMergeManager {
             if (loc[0] == 0 && loc[1] == 0) {
                 zeroViewCount ++;
             }
-            if (child instanceof ViewGroup && !isReadyToMerge(src, zeroViewCount, notReadyCount)) {
+            if (child instanceof ViewGroup && !isReadyToMerge((ViewGroup) child, zeroViewCount, notReadyCount)) {
                 return false;
             }
         }
