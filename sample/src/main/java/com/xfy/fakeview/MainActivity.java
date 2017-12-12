@@ -14,10 +14,12 @@ import android.widget.Toast;
 
 import xfy.fakeview.library.DebugInfo;
 import xfy.fakeview.library.FViewCreater;
+import xfy.fakeview.library.fview.FView;
 import xfy.fakeview.library.fview.IFView;
 import xfy.fakeview.library.fview.IFViewGroup;
 import xfy.fakeview.library.fview.normal.FFrameLayout;
 import xfy.fakeview.library.fview.normal.FImageView;
+import xfy.fakeview.library.fview.normal.FLinearLayout;
 import xfy.fakeview.library.fview.normal.FTextView;
 
 public class MainActivity extends Activity implements IFView.OnClickListener, IFView.OnLongClickListener, View.OnClickListener{
@@ -77,6 +79,7 @@ public class MainActivity extends Activity implements IFView.OnClickListener, IF
                 IFViewGroup.FLayoutParams.WRAP_CONTENT, Gravity.BOTTOM | Gravity.CENTER)
         .setMargins(0, 0, 0, 20));
 
+        layout.addView(newLinear(creater), new IFViewGroup.FLayoutParams(IFViewGroup.FLayoutParams.MATCH_PARENT, IFViewGroup.FLayoutParams.WRAP_CONTENT));
         View root = creater.build();
         root.setLayoutParams(FViewCreater.newMatchParentLayoutParams());
 
@@ -88,6 +91,22 @@ public class MainActivity extends Activity implements IFView.OnClickListener, IF
             }
         };
         return root;
+    }
+
+    private FView newLinear(FViewCreater creater) {
+        FLinearLayout layout = creater.newFView(FLinearLayout.class);
+        layout.setBackgroundColor(Color.GRAY);
+
+        FImageView child1 = creater.newFView(FImageView.class);
+        child1.setImageResource(R.drawable.me);
+        layout.addView(child1, new FLinearLayout.LayoutParams(IFViewGroup.FLayoutParams.WRAP_CONTENT,
+                IFViewGroup.FLayoutParams.WRAP_CONTENT, 0.5f));
+
+        FImageView child2 = creater.newFView(FImageView.class);
+        child2.setImageResource(R.drawable.me);
+        layout.addView(child2, new FLinearLayout.LayoutParams(IFViewGroup.FLayoutParams.WRAP_CONTENT,
+                IFViewGroup.FLayoutParams.WRAP_CONTENT, 0.5f));
+        return layout;
     }
 
     private IFViewGroup.FLayoutParams newMatchParentParams() {

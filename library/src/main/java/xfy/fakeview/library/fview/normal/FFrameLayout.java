@@ -107,10 +107,6 @@ public class FFrameLayout extends FViewGroup {
         }
     }
 
-    public static int combineMeasuredStates(int curState, int newState) {
-        return curState | newState;
-    }
-
     @Override
     public void layoutChild(FView child) {
         final int parentLeft = getPaddingLeft();
