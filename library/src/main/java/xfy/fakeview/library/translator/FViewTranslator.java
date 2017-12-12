@@ -9,6 +9,7 @@ import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import java.util.HashMap;
@@ -16,6 +17,7 @@ import java.util.HashMap;
 import xfy.fakeview.library.fview.FView;
 import xfy.fakeview.library.fview.normal.FFrameLayout;
 import xfy.fakeview.library.fview.normal.FImageView;
+import xfy.fakeview.library.fview.normal.FLinearLayout;
 import xfy.fakeview.library.fview.normal.FTextView;
 
 /**
@@ -33,6 +35,7 @@ public class FViewTranslator {
         TRANS = new HashMap<>();
         TRANS.put(View.class, FView.class);
         TRANS.put(FrameLayout.class, FFrameLayout.class);
+        TRANS.put(LinearLayout.class, FLinearLayout.class);
         TRANS.put(ImageView.class, FImageView.class);
         TRANS.put(ImageButton.class, FImageView.class);
         TRANS.put(TextView.class, FTextView.class);

@@ -6,6 +6,7 @@ import java.util.HashMap;
 
 import xfy.fakeview.library.fview.FView;
 import xfy.fakeview.library.fview.normal.FImageView;
+import xfy.fakeview.library.fview.normal.FLinearLayout;
 import xfy.fakeview.library.fview.normal.FTextView;
 
 /**
@@ -23,6 +24,7 @@ public class DataTranslatorManager {
         dataTranslatorMap.put(FImageView.class, new ImageDataTranslator());
         dataTranslatorMap.put(FTextView.class, new TextDataTranslator());
         dataTranslatorMap.put(FView.class, new ViewDataTranslator());
+        dataTranslatorMap.put(FLinearLayout.class, new LinearDataTranslator());
     }
 
     public static void registerTranslator(Class<? extends FView> clz, IDataTranslator translator) {

@@ -2,11 +2,13 @@ package xfy.fakeview.library.translator;
 
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 
 import java.util.HashMap;
 
 import xfy.fakeview.library.fview.IFViewGroup;
 import xfy.fakeview.library.fview.normal.FFrameLayout;
+import xfy.fakeview.library.fview.normal.FLinearLayout;
 
 /**
  * Created by XiongFangyu on 2017/11/8.
@@ -24,6 +26,7 @@ public class FLayoutParamsTranslator {
         TRANS.put(ViewGroup.LayoutParams.class, IFViewGroup.FLayoutParams.class);
         TRANS.put(ViewGroup.MarginLayoutParams.class, IFViewGroup.FLayoutParams.class);
         TRANS.put(FrameLayout.LayoutParams.class, FFrameLayout.LayoutParams.class);
+        TRANS.put(LinearLayout.LayoutParams.class, FLinearLayout.LayoutParams.class);
     }
 
     /**

@@ -125,6 +125,7 @@ public class TranslatorManager {
         translateEvent(fView, target);
 
         if (target instanceof ViewGroup) {
+            DataTranslatorManager.translateData(fView, target);
             ViewGroup layout = (ViewGroup) target;
             final int childCount = layout.getChildCount();
             for (int i = 0; i < childCount; i ++) {

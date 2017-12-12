@@ -78,6 +78,12 @@ public class FMeasureSpec {
     public static final int MEASURED_STATE_MASK = 0xff000000;
 
     /**
+     * Bits of {@link #getMeasuredWidthAndState()} and
+     * {@link #getMeasuredWidthAndState()} that provide the actual measured size.
+     */
+    public static final int MEASURED_SIZE_MASK = 0x00ffffff;
+
+    /**
      * Creates a measure specification based on the supplied size and mode.
      *
      * The mode must always be one of the following:

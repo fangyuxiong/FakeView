@@ -1025,6 +1025,10 @@ public class FView implements IFView, Drawable.Callback{
         return (mBackground == null) ? 0 : mBackground.getMinimumWidth();
     }
 
+    public static int combineMeasuredStates(int curState, int newState) {
+        return curState | newState;
+    }
+
     private final class CheckForLongPress implements Runnable {
 
         @Override
