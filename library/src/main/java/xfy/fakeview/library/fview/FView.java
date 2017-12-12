@@ -136,8 +136,11 @@ public class FView implements IFView, Drawable.Callback{
     @Override
     public void setVisibility(@Visibility int visibility) {
         checkVisibilityMask(visibility);
-        removeFlag(VISIBILITY_MASK);
-        addFlag(visibility);
+        if (getFlag(VISIBILITY_MASK) != visibility) {
+            removeFlag(VISIBILITY_MASK);
+            addFlag(visibility);
+            requestFViewTreeLayout();
+        }
     }
 
     @Override
@@ -146,7 +149,7 @@ public class FView implements IFView, Drawable.Callback{
     }
 
     protected static void checkVisibilityMask(int visibility) {
-        if (visibility != VISIBLE || visibility != INVISIBLE || visibility != GONE)
+        if (visibility != VISIBLE && visibility != INVISIBLE && visibility != GONE)
             throw new IllegalArgumentException("param visibility can only use : [VISIBLE, INVISIBLE, GONE]");
     }
 

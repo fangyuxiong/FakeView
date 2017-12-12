@@ -40,7 +40,7 @@ public class MainActivity extends Activity implements IFView.OnClickListener, IF
         container.setOnClickListener(this);
 
         handler = new Handler();
-        handler.postDelayed(invalidateRunnable, 1000);
+//        handler.postDelayed(invalidateRunnable, 1000);
     }
 
     @Override
@@ -102,10 +102,27 @@ public class MainActivity extends Activity implements IFView.OnClickListener, IF
         layout.addView(child1, new FLinearLayout.LayoutParams(IFViewGroup.FLayoutParams.WRAP_CONTENT,
                 IFViewGroup.FLayoutParams.WRAP_CONTENT, 0.5f));
 
-        FImageView child2 = creater.newFView(FImageView.class);
+        final FImageView child2 = creater.newFView(FImageView.class);
         child2.setImageResource(R.drawable.me);
         layout.addView(child2, new FLinearLayout.LayoutParams(IFViewGroup.FLayoutParams.WRAP_CONTENT,
                 IFViewGroup.FLayoutParams.WRAP_CONTENT, 0.5f));
+        child2.setVisibility(IFView.GONE);
+
+        FImageView child3 = creater.newFView(FImageView.class);
+        child3.setImageResource(R.drawable.me);
+        layout.addView(child3, new FLinearLayout.LayoutParams(IFViewGroup.FLayoutParams.WRAP_CONTENT,
+                IFViewGroup.FLayoutParams.WRAP_CONTENT, 0.5f));
+        child3.setOnClickListener(new IFView.OnClickListener() {
+            @Override
+            public void onClick(IFView view) {
+                Log.d("tag", "on click");
+                if (child2.getVisibility() != IFView.VISIBLE) {
+                    child2.setVisibility(IFView.VISIBLE);
+                } else {
+                    child2.setVisibility(IFView.GONE);
+                }
+            }
+        });
         return layout;
     }
 
