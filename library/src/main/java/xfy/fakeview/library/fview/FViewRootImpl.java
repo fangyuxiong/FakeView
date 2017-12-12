@@ -172,14 +172,19 @@ public class FViewRootImpl extends View implements IFViewRoot {
 
     @Override
     public void requestFViewTreeLayout() {
-        if (mTargetView == null)
+        if (mTargetView == null) {
+            Log.e(TAG, "requestFViewTreeLayout no target view");
             return;
+        }
         post(new Runnable() {
             @Override
             public void run() {
                 if (mTargetView != null) {
                     measureChildWithMargins(mTargetView, oldWidthMeasureSpec, 0, oldHeightMeasureSpec, 0);
                     layoutChild(mTargetView);
+                    invalidate();
+                } else {
+                    Log.e(TAG, "requestFViewTreeLayout no target view in action");
                 }
             }
         });
