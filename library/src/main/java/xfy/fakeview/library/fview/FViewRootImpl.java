@@ -182,7 +182,6 @@ public class FViewRootImpl extends View implements IFViewRoot {
                 if (mTargetView != null) {
                     measureChildWithMargins(mTargetView, oldWidthMeasureSpec, 0, oldHeightMeasureSpec, 0);
                     layoutChild(mTargetView);
-                    invalidate();
                 } else {
                     Log.e(TAG, "requestFViewTreeLayout no target view in action");
                 }

@@ -225,4 +225,38 @@ public abstract class FViewGroup extends FView implements IFViewGroup {
     public int getOldHeightMeasureSpec() {
         return oldHeightMeasureSpec;
     }
+
+    public int indexOfChild(FView child) {
+        return mChildren.indexOf(child);
+    }
+
+    public void removeView(FView view) {
+        removeViewAt(mChildren.indexOf(view));
+    }
+
+    public void removeViewAt(int index) {
+        removeViews(index, 1);
+    }
+
+    public void removeViews(int start, int count) {
+        removeViewsInternal(start, count);
+        requestFViewTreeLayout();
+        invalidate();
+    }
+
+    public void removeAllViews() {
+        removeViews(0, getChildCount());
+    }
+
+    private void removeViewsInternal(int start, int count) {
+        final int end = start + count;
+        final int lastChildCount = getChildCount();
+        if (start < 0 || count < 0 || end > lastChildCount) {
+            throw new IndexOutOfBoundsException();
+        }
+        for (int i = start; i < end; i ++) {
+            FView child = mChildren.remove(start);
+            child.parent = null;
+        }
+    }
 }
