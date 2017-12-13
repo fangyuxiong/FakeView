@@ -140,6 +140,13 @@ public class FView implements IFView, Drawable.Callback{
             removeFlag(VISIBILITY_MASK);
             addFlag(visibility);
             requestFViewTreeLayout();
+            if (parent != null) {
+                if (parent instanceof IFView) {
+                    ((IFView) parent).invalidate();
+                } else if (parent instanceof IFViewRoot) {
+                    ((IFViewRoot) parent).invalidate();
+                }
+            }
         }
     }
 
