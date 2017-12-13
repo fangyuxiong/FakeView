@@ -30,7 +30,7 @@ public class FTextView extends FView {
 
     private CharSequence mText;
 
-    private final TextPaint mTextPaint;
+    protected final TextPaint mTextPaint;
     private Layout mLayout;
     private TextUtils.TruncateAt mEllipsize;
     private float mSpacingMult = 1.0f;
@@ -98,6 +98,17 @@ public class FTextView extends FView {
             }
         }
         setMeasuredDimension(width, height);
+    }
+
+    public void setBoldText(boolean bold) {
+        if (mTextPaint.isFakeBoldText() != bold) {
+            mTextPaint.setFakeBoldText(bold);
+            if (mLayout != null) {
+                mLayout = null;
+                requestFViewTreeLayout();
+                invalidate();
+            }
+        }
     }
 
     public void setTextColor(int color) {
