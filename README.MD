@@ -15,7 +15,7 @@ FakeView提取出在屏幕绘制一个控件最基本的动作：创建-计算-�
 ## 使用方法
 gradle:
 ```
-compile "xfy.fakeview.library:fview:0.28"
+compile "xfy.fakeview.library:fview:0.29"
 ```
 直接生成FView：
 ```

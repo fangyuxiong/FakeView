@@ -119,7 +119,7 @@ public class LayersMergeEngine implements OnExtractViewGroupListener, OnMergeFai
      *                   @see LayoutData
      * @return true: add to scheduler, false otherwise
      */
-    public boolean addMergeAction(LayoutData layoutData) {
+    public synchronized boolean addMergeAction(LayoutData layoutData) {
         final FrameLayout layout = layoutData.layout;
         if (!LayersMergeManager.needMerge(layout))
             return false;
