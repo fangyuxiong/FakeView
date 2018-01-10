@@ -153,11 +153,11 @@ public class MainActivity extends Activity implements IFView.OnClickListener, IF
                 startActivity(new Intent(this, TestMergeLayersActivity.class));
                 return true;
             case 2:
-                long start = System.currentTimeMillis();
-                int[] pos = new int[2];
-                view.getLocationInWindow(pos);
-                Toast.makeText(this, "image loc: [" + pos[0] + ", " + pos[1] + "], cast: " + (System.currentTimeMillis() - start), Toast.LENGTH_LONG).show();
-
+//                long start = System.currentTimeMillis();
+//                int[] pos = new int[2];
+//                view.getLocationInWindow(pos);
+//                Toast.makeText(this, "image loc: [" + pos[0] + ", " + pos[1] + "], cast: " + (System.currentTimeMillis() - start), Toast.LENGTH_LONG).show();
+                startActivity(new Intent(this, TestShallowLayersActivity.class));
                 return true;
         }
         return false;

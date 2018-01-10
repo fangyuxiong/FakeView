@@ -16,6 +16,7 @@
         <activity android:name=".TestTranslateActivity" />
         <activity android:name=".TestMergeLayersActivity" />
         <activity android:name=".TestMergeEngineActivity"></activity>
+        <activity android:name=".TestShallowLayersActivity"/>
     </application>
 
 </manifest>
