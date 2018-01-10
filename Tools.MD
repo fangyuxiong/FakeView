@@ -36,3 +36,17 @@ LayersMergeEngine.getEngine().pause();
 //继续
 LayersMergeEngine.getEngine().resume();
 ```
+
+## Shallow Layers
+
+减少层级工具：将无用的ViewGroup移除
+
+使用方法：
+```
+ShallowLayerManager manager = new ShallowLayerManager(root);
+//设置监听，在listener中返回true则跳过当前view
+manager.setOnShallowViewListener(listener);
+manager.start();
+//跳过LinearLayout及其子类
+ShallowLayerManager.registerNotShallowClass(LinearLayout.class);
+```
