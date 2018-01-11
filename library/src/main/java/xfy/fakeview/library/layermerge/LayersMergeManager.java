@@ -72,6 +72,9 @@ public class LayersMergeManager {
 
     private OnExtractViewGroupListener onExtractViewGroupListener;
 
+    private int zeroLocCount = 0;
+    private int maxZeroLocCount = 3;
+
     /**
      * Indicate the view tree need merge
      * @param parent view tree parent
@@ -163,6 +166,21 @@ public class LayersMergeManager {
      * @param listener callback invoked when extracting a ViewGroup
      */
     public LayersMergeManager(FrameLayout parent, int flag, OnExtractViewGroupListener listener) {
+        this(parent, flag, 3, listener);
+    }
+
+    /**
+     * Constructor for this manager
+     *
+     * @param parent view tree parent.
+     *               If parent is other ViewGroup(eg. LinearLayout),
+     *               create a new FrameLayout wrapping that parent, and pass the
+     *               FrameLayout.
+     * @param flag flag for extracting info
+     * @param maxZeroLocCount max count
+     * @param listener callback invoked when extracting a ViewGroup
+     */
+    public LayersMergeManager(FrameLayout parent, int flag, int maxZeroLocCount, OnExtractViewGroupListener listener) {
         this.extractFlag = flag;
         rootLayout = parent;
         rootLoc = new Loc(getViewLocation(parent));
@@ -170,18 +188,21 @@ public class LayersMergeManager {
         rootHeight = parent.getHeight();
         childrens = new ArrayList<>();
         childrenLoc = new ArrayList<>();
+        this.maxZeroLocCount = maxZeroLocCount;
         onExtractViewGroupListener = listener;
     }
 
     /**
      * Start merge layers
      * When done, this object is useless.
+     * @return true if merge success, false otherwise
      */
-    public void mergeChildrenLayers() {
-        extractViewFromParent(rootLayout);
+    public boolean mergeChildrenLayers() {
+        boolean result = extractViewFromParent(rootLayout);
         addChildrenByLoc();
         rootLayout = null;
         rootLoc = null;
+        return result;
     }
 
     /**
@@ -193,6 +214,8 @@ public class LayersMergeManager {
         int pt = rootLayout.getPaddingTop();
         for (int i = 0 ; i < childCount ;i ++ ) {
             View child = childrens.get(i);
+            if (child.getParent() != null)
+                continue;
             Loc childLoc = childrenLoc.get(i);
             FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(child.getLayoutParams());
             params.setMargins(childLoc.left - rootLoc.left - pl,
@@ -210,8 +233,9 @@ public class LayersMergeManager {
     /**
      * Extracting all view(not ViewGroup) and saving in array.
      * @param parent extract children in parent
+     * @return true if extract success, false otherwise
      */
-    private void extractViewFromParent(ViewGroup parent) {
+    private boolean extractViewFromParent(ViewGroup parent) {
         final int childCount = parent.getChildCount();
         for (int i = 0; i < childCount; i ++) {
             View c = parent.getChildAt(i);
@@ -231,18 +255,36 @@ public class LayersMergeManager {
                             continue;
                     }
                 }
+                int[] loc = getViewLocation(c);
+                if (isZeroLoc(loc)) {
+                    zeroLocCount ++;
+                }
+                if (zeroLocCount >= maxZeroLocCount)
+                    return false;
                 View backgroundHolder = createViewByExtractingFlag((ViewGroup) c);
                 if (backgroundHolder != null) {
                     childrens.add(backgroundHolder);
-                    childrenLoc.add(new Loc(getViewLocation(c)));
+                    childrenLoc.add(new Loc(loc));
                 }
-                extractViewFromParent((ViewGroup) c);
+                if (!extractViewFromParent((ViewGroup) c))
+                    return false;
             } else {
+                int[] loc = getViewLocation(c);
+                if (isZeroLoc(loc)) {
+                    zeroLocCount ++;
+                }
+                if (zeroLocCount >= maxZeroLocCount)
+                    return false;
                 childrens.add(c);
-                childrenLoc.add(new Loc(getViewLocation(c)));
+                childrenLoc.add(new Loc(loc));
             }
         }
         parent.removeAllViews();
+        return true;
+    }
+
+    private boolean isZeroLoc(int[] loc) {
+        return loc[0] == 0 && loc[1] == 0;
     }
 
     private View createViewByExtractingFlag(ViewGroup src) {
