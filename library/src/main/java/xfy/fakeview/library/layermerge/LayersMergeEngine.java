@@ -346,7 +346,10 @@ public class LayersMergeEngine implements OnExtractViewGroupListener, OnMergeFai
                             onCannotMerge(false);
                         } else {
                             LayersMergeManager manager = new LayersMergeManager(src, info, listener);
-                            manager.mergeChildrenLayers();
+                            if (!manager.mergeChildrenLayers()) {
+                                layout.failTimes++;
+                                onCannotMerge(false);
+                            }
                         }
                     }
                     synchronized (lock) {
@@ -376,13 +379,14 @@ public class LayersMergeEngine implements OnExtractViewGroupListener, OnMergeFai
         }
 
         private void onCannotMerge(boolean postNext) {
+            if (layout.onMergeFailedListener != null) {
+                layout.onMergeFailedListener.onMergeFailed(layout.layout, layout.tag,
+                        layout.extractInfo, layout.failTimes);
+            }
             final Object tag = layout.tag;
             if (!removeTags.contains(tag)) {
                 if (layout.failTimes < layout.maxFailTimes) {
                     addMergeAction(layout);
-                } else if (layout.onMergeFailedListener != null){
-                    layout.onMergeFailedListener.onMergeFailed(layout.layout, layout.tag,
-                            layout.extractInfo, layout.failTimes);
                 }
             } else {
                 removeTags.remove(tag);
