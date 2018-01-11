@@ -2,12 +2,14 @@ package xfy.fakeview.library.layermerge;
 
 import android.graphics.drawable.Drawable;
 import android.os.Build;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
 import java.util.ArrayList;
 
+import xfy.fakeview.library.DebugInfo;
 import xfy.fakeview.library.translator.EventExtractor;
 
 /**
@@ -107,6 +109,12 @@ public class LayersMergeManager {
                 return false;
             View child = src.getChildAt(i);
             int[] loc = getViewLocation(child);
+            if (DebugInfo.DEBUG) {
+                Log.d(LayersMergeManager.class.getSimpleName(),
+                        String.format("isReadyToMerge(%s, %d, %d) child: %s, loc: [%d-%d]",
+                                    src.getClass().getSimpleName(), zeroViewCount, notReadyCount,
+                                    child.getClass().getSimpleName(), loc[0], loc[1]));
+            }
             if (loc[0] == 0 && loc[1] == 0) {
                 zeroViewCount ++;
             }
