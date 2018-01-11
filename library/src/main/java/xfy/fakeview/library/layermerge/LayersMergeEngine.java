@@ -400,7 +400,7 @@ public class LayersMergeEngine implements OnExtractViewGroupListener, OnMergeFai
         }
 
         private boolean checkViewIsLaidOut() {
-            return LayersMergeManager.isReadyToMerge(layout.layout);
+            return LayersMergeManager.isReadyToMerge(layout.layout, 0, layout.maxNotReadyCount);
         }
     }
 
@@ -409,6 +409,7 @@ public class LayersMergeEngine implements OnExtractViewGroupListener, OnMergeFai
         int extractInfo = 0;
         Object tag;
         int maxFailTimes = 0;
+        int maxNotReadyCount = 3;
         OnExtractViewGroupListener onExtractViewGroupListener;
         OnMergeFailedListener onMergeFailedListener;
 
@@ -423,11 +424,16 @@ public class LayersMergeEngine implements OnExtractViewGroupListener, OnMergeFai
         }
 
         public LayoutData(Object tag, FrameLayout layout, int extractInfo, int maxFailTimes, OnExtractViewGroupListener listener) {
+            this(tag, layout, extractInfo, maxFailTimes, 3, listener);
+        }
+
+        public LayoutData(Object tag, FrameLayout layout, int extractInfo, int maxFailTimes, int maxNotReadyCount, OnExtractViewGroupListener listener) {
             this.tag = tag;
             this.layout = layout;
             this.extractInfo = extractInfo;
             this.maxFailTimes = maxFailTimes;
             onExtractViewGroupListener = listener;
+            this.maxNotReadyCount = maxNotReadyCount;
             checkValid();
         }
 
