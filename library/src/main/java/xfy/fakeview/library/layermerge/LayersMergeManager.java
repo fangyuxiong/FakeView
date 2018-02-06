@@ -120,21 +120,24 @@ public class LayersMergeManager {
             if (zeroViewCount >= notReadyCount)
                 return false;
             View child = src.getChildAt(i);
-            int[] loc = getViewLocation(child);
+            if (isZeroLocFromParent(child)) {
+                zeroViewCount ++;
+            }
             if (DebugInfo.DEBUG) {
                 Log.d(LayersMergeManager.class.getSimpleName(),
-                        String.format("isReadyToMerge(%s, %d, %d) child: %s, loc: [%d-%d]",
+                        String.format("isReadyToMerge(%s, %d, %d) child: %s",
                                     src.getClass().getSimpleName(), zeroViewCount, notReadyCount,
-                                    child.getClass().getSimpleName(), loc[0], loc[1]));
-            }
-            if (loc[0] == 0 && loc[1] == 0) {
-                zeroViewCount ++;
+                                    child.getClass().getSimpleName()));
             }
             if (child instanceof ViewGroup && !isReadyToMerge((ViewGroup) child, zeroViewCount, notReadyCount)) {
                 return false;
             }
         }
         return true;
+    }
+
+    private static boolean isZeroLocFromParent(View v) {
+        return v.getLeft() == 0 && v.getTop() == 0;
     }
 
     /**
@@ -264,11 +267,7 @@ public class LayersMergeManager {
                             continue;
                     }
                 }
-                int[] loc = getViewLocation(c);
-                if (DebugInfo.DEBUG) {
-                    logViewAndLoc(c, loc);
-                }
-                if (isZeroLoc(loc) && isZeroLocFromParent(c)) {
+                if (isZeroLocFromParent(c)) {
                     zeroLocCount ++;
                 }
                 if (DebugInfo.DEBUG) {
@@ -276,6 +275,10 @@ public class LayersMergeManager {
                 }
                 if (zeroLocCount >= maxZeroLocCount)
                     return false;
+                int[] loc = getViewLocation(c);
+                if (DebugInfo.DEBUG) {
+                    logViewAndLoc(c, loc);
+                }
                 View backgroundHolder = createViewByExtractingFlag((ViewGroup) c);
                 if (backgroundHolder != null) {
                     childrens.add(backgroundHolder);
@@ -284,11 +287,7 @@ public class LayersMergeManager {
                 if (!extractViewFromParent((ViewGroup) c))
                     return false;
             } else {
-                int[] loc = getViewLocation(c);
-                if (DebugInfo.DEBUG) {
-                    logViewAndLoc(c, loc);
-                }
-                if (isZeroLoc(loc) && isZeroLocFromParent(c)) {
+                if (isZeroLocFromParent(c)) {
                     zeroLocCount ++;
                 }
                 if (DebugInfo.DEBUG) {
@@ -296,6 +295,10 @@ public class LayersMergeManager {
                 }
                 if (zeroLocCount >= maxZeroLocCount)
                     return false;
+                int[] loc = getViewLocation(c);
+                if (DebugInfo.DEBUG) {
+                    logViewAndLoc(c, loc);
+                }
                 childrens.add(c);
                 childrenLoc.add(new Loc(loc));
             }
@@ -310,10 +313,6 @@ public class LayersMergeManager {
 
     private boolean isZeroLoc(int[] loc) {
         return loc[0] == 0 && loc[1] == 0;
-    }
-
-    private boolean isZeroLocFromParent(View v) {
-        return v.getLeft() == 0 && v.getTop() == 0;
     }
 
     private View createViewByExtractingFlag(ViewGroup src) {
