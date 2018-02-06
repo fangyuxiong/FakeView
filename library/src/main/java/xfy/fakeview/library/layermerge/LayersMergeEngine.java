@@ -336,6 +336,7 @@ public class LayersMergeEngine implements OnExtractViewGroupListener, OnMergeFai
             final Object tag = layout.tag;
             final int info = layout.extractInfo;
             final OnExtractViewGroupListener listener = layout.onExtractViewGroupListener;
+            final int mzl = layout.maxZeroLocCountWhenExtracting;
 
             //do merge action by LayersMergeManager in main thread.
             mainHandler.postDelayed(new Runnable() {
@@ -345,7 +346,7 @@ public class LayersMergeEngine implements OnExtractViewGroupListener, OnMergeFai
                         if (!checkCanMerge()) {
                             onCannotMerge(false);
                         } else {
-                            LayersMergeManager manager = new LayersMergeManager(src, info, listener);
+                            LayersMergeManager manager = new LayersMergeManager(src, info, mzl, listener);
                             if (!manager.mergeChildrenLayers()) {
                                 layout.failTimes++;
                                 onCannotMerge(false);
@@ -414,6 +415,7 @@ public class LayersMergeEngine implements OnExtractViewGroupListener, OnMergeFai
         Object tag;
         int maxFailTimes = 0;
         int maxNotReadyCount = 3;
+        int maxZeroLocCountWhenExtracting = 3;
         OnExtractViewGroupListener onExtractViewGroupListener;
         OnMergeFailedListener onMergeFailedListener;
 
@@ -432,12 +434,17 @@ public class LayersMergeEngine implements OnExtractViewGroupListener, OnMergeFai
         }
 
         public LayoutData(Object tag, FrameLayout layout, int extractInfo, int maxFailTimes, int maxNotReadyCount, OnExtractViewGroupListener listener) {
+            this(tag, layout, extractInfo, maxFailTimes, maxNotReadyCount, 3, listener);
+        }
+
+        public LayoutData(Object tag, FrameLayout layout, int extractInfo, int maxFailTimes, int maxNotReadyCount, int maxZeroLocCountWhenExtracting, OnExtractViewGroupListener listener) {
             this.tag = tag;
             this.layout = layout;
             this.extractInfo = extractInfo;
             this.maxFailTimes = maxFailTimes;
             onExtractViewGroupListener = listener;
             this.maxNotReadyCount = maxNotReadyCount;
+            this.maxZeroLocCountWhenExtracting = maxZeroLocCountWhenExtracting;
             checkValid();
         }
 
