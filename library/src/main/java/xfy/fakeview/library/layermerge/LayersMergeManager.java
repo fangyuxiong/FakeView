@@ -277,8 +277,14 @@ public class LayersMergeManager {
                     return false;
             } else {
                 int[] loc = getViewLocation(c);
+                if (DebugInfo.DEBUG) {
+                    logViewAndLoc(c, loc);
+                }
                 if (isZeroLoc(loc)) {
                     zeroLocCount ++;
+                }
+                if (DebugInfo.DEBUG) {
+                    Log.d(LayersMergeManager.class.getSimpleName(), String.format("zero loc count: %d, max: %d", zeroLocCount, maxZeroLocCount));
                 }
                 if (zeroLocCount >= maxZeroLocCount)
                     return false;
