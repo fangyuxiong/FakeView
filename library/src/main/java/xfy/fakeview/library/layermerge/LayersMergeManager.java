@@ -54,6 +54,10 @@ public class LayersMergeManager {
      * Extracting ViewGroup contain background or event
      */
     public static final int EXTRACT_ALL                 = EXTRACT_BACKGROUND | EXTRACT_ALL_EVENT;
+    /**
+     * Extracting background drawable from a view
+     */
+    private static ChildViewGroupBackgroundExtractor childViewGroupBackgroundExtractor;
 
     private FrameLayout rootLayout;
     private Loc rootLoc;
@@ -75,6 +79,10 @@ public class LayersMergeManager {
 
     private int zeroLocCount = 0;
     private int maxZeroLocCount = 3;
+
+    public static void setChildViewGroupBackgroundExtractor(ChildViewGroupBackgroundExtractor childViewGroupBackgroundExtractor) {
+        LayersMergeManager.childViewGroupBackgroundExtractor = childViewGroupBackgroundExtractor;
+    }
 
     /**
      * Indicate the view tree need merge
@@ -260,7 +268,7 @@ public class LayersMergeManager {
                 if (DebugInfo.DEBUG) {
                     logViewAndLoc(c, loc);
                 }
-                if (isZeroLoc(loc)) {
+                if (isZeroLoc(loc) && isZeroLocFromParent(c)) {
                     zeroLocCount ++;
                 }
                 if (DebugInfo.DEBUG) {
@@ -280,7 +288,7 @@ public class LayersMergeManager {
                 if (DebugInfo.DEBUG) {
                     logViewAndLoc(c, loc);
                 }
-                if (isZeroLoc(loc)) {
+                if (isZeroLoc(loc) && isZeroLocFromParent(c)) {
                     zeroLocCount ++;
                 }
                 if (DebugInfo.DEBUG) {
@@ -304,13 +312,22 @@ public class LayersMergeManager {
         return loc[0] == 0 && loc[1] == 0;
     }
 
+    private boolean isZeroLocFromParent(View v) {
+        return v.getLeft() == 0 && v.getTop() == 0;
+    }
+
     private View createViewByExtractingFlag(ViewGroup src) {
         final int flag = extractFlag;
         if (flag == EXTRACT_NONE)
             return null;
         View result = null;
         if ((flag & EXTRACT_BACKGROUND) == EXTRACT_BACKGROUND) {
-            Drawable background = src.getBackground();
+            Drawable background = null;
+            if (childViewGroupBackgroundExtractor != null) {
+                background = childViewGroupBackgroundExtractor.extractFrom(src);
+            } else {
+                background = src.getBackground();
+            }
             if (background != null) {
                 result = createHolderViewForViewGroup(src);
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
