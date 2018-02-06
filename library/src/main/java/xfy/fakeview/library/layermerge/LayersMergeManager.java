@@ -8,6 +8,7 @@ import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import xfy.fakeview.library.DebugInfo;
 import xfy.fakeview.library.translator.EventExtractor;
@@ -256,8 +257,14 @@ public class LayersMergeManager {
                     }
                 }
                 int[] loc = getViewLocation(c);
+                if (DebugInfo.DEBUG) {
+                    logViewAndLoc(c, loc);
+                }
                 if (isZeroLoc(loc)) {
                     zeroLocCount ++;
+                }
+                if (DebugInfo.DEBUG) {
+                    Log.d(LayersMergeManager.class.getSimpleName(), String.format("zero loc count: %d, max: %d", zeroLocCount, maxZeroLocCount));
                 }
                 if (zeroLocCount >= maxZeroLocCount)
                     return false;
@@ -281,6 +288,10 @@ public class LayersMergeManager {
         }
         parent.removeAllViews();
         return true;
+    }
+
+    private void logViewAndLoc(View v, int[] loc) {
+        Log.d(LayersMergeManager.class.getSimpleName(), String.format("view loc: %s, view: %s", Arrays.toString(loc), v.toString()));
     }
 
     private boolean isZeroLoc(int[] loc) {
