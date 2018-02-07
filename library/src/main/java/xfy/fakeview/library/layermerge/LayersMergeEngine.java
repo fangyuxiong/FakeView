@@ -302,6 +302,16 @@ public class LayersMergeEngine implements OnExtractViewGroupListener, MergeStatu
         }
     }
 
+    @Override
+    public void onMergeStart(FrameLayout layout, Object tag) {
+        if (mergeStatusListeners != null) {
+            ArrayList<MergeStatusListener> temp = new ArrayList<>(mergeStatusListeners);
+            for (int i = 0, l = temp.size(); i < l;i ++) {
+                temp.get(i).onMergeStart(layout, tag);
+            }
+        }
+    }
+
     private class NextAction implements Runnable {
         @Override
         public void run() {
@@ -357,6 +367,8 @@ public class LayersMergeEngine implements OnExtractViewGroupListener, MergeStatu
                         if (!checkCanMerge()) {
                             onCannotMerge(false, MergeStatusListener.FAILED_TYPE_NOT_READY);
                         } else {
+                            if (statusListener != null)
+                                statusListener.onMergeStart(src, tag);
                             LayersMergeManager manager = new LayersMergeManager(src, info, mzl, listener);
                             if (!manager.mergeChildrenLayers()) {
                                 layout.failTimes++;
