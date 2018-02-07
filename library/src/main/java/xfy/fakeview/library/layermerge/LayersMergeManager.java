@@ -58,6 +58,10 @@ public class LayersMergeManager {
      * Extracting background drawable from a view
      */
     private static ChildViewGroupBackgroundExtractor childViewGroupBackgroundExtractor;
+    /**
+     * Check view is ready
+     */
+    private static ViewReadyChecker mViewReadyChecker = new DefaultViewReadyChecker();
 
     private FrameLayout rootLayout;
     private Loc rootLoc;
@@ -82,6 +86,12 @@ public class LayersMergeManager {
 
     public static void setChildViewGroupBackgroundExtractor(ChildViewGroupBackgroundExtractor childViewGroupBackgroundExtractor) {
         LayersMergeManager.childViewGroupBackgroundExtractor = childViewGroupBackgroundExtractor;
+    }
+
+    public static void setViewReadyChecker(ViewReadyChecker viewReadyChecker) {
+        if (viewReadyChecker == null)
+            throw new NullPointerException("viewReadyChecker is null!");
+        LayersMergeManager.mViewReadyChecker = viewReadyChecker;
     }
 
     /**
@@ -117,12 +127,12 @@ public class LayersMergeManager {
     public static boolean isReadyToMerge(ViewGroup src, int zeroViewCount, int notReadyCount) {
         final int childCount = src.getChildCount();
         for (int i = 0; i < childCount; i ++) {
-            if (zeroViewCount >= notReadyCount)
-                return false;
             View child = src.getChildAt(i);
-            if (isZeroLocFromParent(child)) {
+            if (!mViewReadyChecker.check(child)) {
                 zeroViewCount ++;
             }
+            if (zeroViewCount >= notReadyCount && notReadyCount > 0)
+                return false;
             if (DebugInfo.DEBUG) {
                 Log.d(LayersMergeManager.class.getSimpleName(),
                         String.format("isReadyToMerge(%s, %d, %d) child: %s",
@@ -134,10 +144,6 @@ public class LayersMergeManager {
             }
         }
         return true;
-    }
-
-    private static boolean isZeroLocFromParent(View v) {
-        return v.getLeft() == 0 && v.getTop() == 0;
     }
 
     /**
@@ -274,13 +280,13 @@ public class LayersMergeManager {
                             continue;
                     }
                 }
-                if (isZeroLocFromParent(c)) {
+                if (!mViewReadyChecker.check(c)) {
                     zeroLocCount ++;
                 }
                 if (DebugInfo.DEBUG) {
                     Log.d(LayersMergeManager.class.getSimpleName(), String.format("zero loc count: %d, max: %d", zeroLocCount, maxZeroLocCount));
                 }
-                if (zeroLocCount >= maxZeroLocCount)
+                if (zeroLocCount >= maxZeroLocCount && maxZeroLocCount > 0)
                     return false;
                 int[] loc = getViewLocation(c);
                 if (DebugInfo.DEBUG) {
@@ -294,13 +300,13 @@ public class LayersMergeManager {
                 if (!extractViewFromParent((ViewGroup) c))
                     return false;
             } else {
-                if (isZeroLocFromParent(c)) {
+                if (!mViewReadyChecker.check(c)) {
                     zeroLocCount ++;
                 }
                 if (DebugInfo.DEBUG) {
                     Log.d(LayersMergeManager.class.getSimpleName(), String.format("zero loc count: %d, max: %d", zeroLocCount, maxZeroLocCount));
                 }
-                if (zeroLocCount >= maxZeroLocCount)
+                if (zeroLocCount >= maxZeroLocCount && maxZeroLocCount > 0)
                     return false;
                 int[] loc = getViewLocation(c);
                 if (DebugInfo.DEBUG) {
@@ -316,10 +322,6 @@ public class LayersMergeManager {
 
     private void logViewAndLoc(View v, int[] loc) {
         Log.d(LayersMergeManager.class.getSimpleName(), String.format("view loc: %s, view: %s", Arrays.toString(loc), v.toString()));
-    }
-
-    private boolean isZeroLoc(int[] loc) {
-        return loc[0] == 0 && loc[1] == 0;
     }
 
     private View createViewByExtractingFlag(ViewGroup src) {
