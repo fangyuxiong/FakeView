@@ -27,7 +27,7 @@ import xfy.fakeview.library.DebugInfo;
  * @see #removeMergeActionByTag(Object)
  * @see #removeAllAction()
  */
-public class LayersMergeEngine implements OnExtractViewGroupListener, OnMergeFailedListener{
+public class LayersMergeEngine implements OnExtractViewGroupListener, MergeStatusListener {
     private static final String TAG = "LayersMergeEngine";
     private static volatile LayersMergeEngine engine;
     private static final int DELAY = 16;
@@ -59,7 +59,7 @@ public class LayersMergeEngine implements OnExtractViewGroupListener, OnMergeFai
     private boolean merging = false;
     private final ArrayList<Object> removeTags;
     private ArrayList<OnExtractViewGroupListener> onExtractViewGroupListeners;
-    private ArrayList<OnMergeFailedListener> onMergeFailedListeners;
+    private ArrayList<MergeStatusListener> mergeStatusListeners;
 
     public synchronized void pause() {
         mPause = true;
@@ -185,24 +185,24 @@ public class LayersMergeEngine implements OnExtractViewGroupListener, OnMergeFai
         }
     }
 
-    public void addOnMergeFailedListener(OnMergeFailedListener listener) {
-        if (onMergeFailedListeners == null) {
-            onMergeFailedListeners = new ArrayList<>();
+    public void addOnMergeFailedListener(MergeStatusListener listener) {
+        if (mergeStatusListeners == null) {
+            mergeStatusListeners = new ArrayList<>();
         }
-        if (!onMergeFailedListeners.contains(listener)) {
-            onMergeFailedListeners.add(listener);
+        if (!mergeStatusListeners.contains(listener)) {
+            mergeStatusListeners.add(listener);
         }
     }
 
-    public void removeOnMergeFailedListener(OnMergeFailedListener listener) {
-        if (onMergeFailedListeners != null) {
-            onMergeFailedListeners.remove(listener);
+    public void removeOnMergeFailedListener(MergeStatusListener listener) {
+        if (mergeStatusListeners != null) {
+            mergeStatusListeners.remove(listener);
         }
     }
 
     public void clearOnMergeFailedListener() {
-        if (onMergeFailedListeners != null) {
-            onMergeFailedListeners.clear();
+        if (mergeStatusListeners != null) {
+            mergeStatusListeners.clear();
         }
     }
 
@@ -283,11 +283,21 @@ public class LayersMergeEngine implements OnExtractViewGroupListener, OnMergeFai
     }
 
     @Override
-    public void onMergeFailed(FrameLayout layout, Object tag, int extractInfo, int failTimes) {
-        if (onMergeFailedListeners != null) {
-            ArrayList<OnMergeFailedListener> temp = new ArrayList<>(onMergeFailedListeners);
+    public void onMergeFailed(FrameLayout layout, Object tag, int extractInfo, int failTimes, int type) {
+        if (mergeStatusListeners != null) {
+            ArrayList<MergeStatusListener> temp = new ArrayList<>(mergeStatusListeners);
             for (int i = 0, l = temp.size(); i < l;i ++) {
-                temp.get(i).onMergeFailed(layout, tag, extractInfo, failTimes);
+                temp.get(i).onMergeFailed(layout, tag, extractInfo, failTimes, type);
+            }
+        }
+    }
+
+    @Override
+    public void onMergeSuccess(FrameLayout layout, Object tag) {
+        if (mergeStatusListeners != null) {
+            ArrayList<MergeStatusListener> temp = new ArrayList<>(mergeStatusListeners);
+            for (int i = 0, l = temp.size(); i < l;i ++) {
+                temp.get(i).onMergeSuccess(layout, tag);
             }
         }
     }
@@ -312,8 +322,8 @@ public class LayersMergeEngine implements OnExtractViewGroupListener, OnMergeFai
             if (layout.onExtractViewGroupListener == null) {
                 layout.onExtractViewGroupListener = LayersMergeEngine.this;
             }
-            if (layout.onMergeFailedListener == null) {
-                layout.onMergeFailedListener = LayersMergeEngine.this;
+            if (layout.mergeStatusListener == null) {
+                layout.mergeStatusListener = LayersMergeEngine.this;
             }
         }
         @Override
@@ -329,7 +339,7 @@ public class LayersMergeEngine implements OnExtractViewGroupListener, OnMergeFai
             }
             //if not, add merge action and schedule next
             if (!canMerge) {
-                onCannotMerge(true);
+                onCannotMerge(true, MergeStatusListener.FAILED_TYPE_NOT_READY);
                 return;
             }
             final FrameLayout src = layout.layout;
@@ -337,6 +347,7 @@ public class LayersMergeEngine implements OnExtractViewGroupListener, OnMergeFai
             final int info = layout.extractInfo;
             final OnExtractViewGroupListener listener = layout.onExtractViewGroupListener;
             final int mzl = layout.maxZeroLocCountWhenExtracting;
+            final MergeStatusListener statusListener = layout.mergeStatusListener;
 
             //do merge action by LayersMergeManager in main thread.
             mainHandler.postDelayed(new Runnable() {
@@ -344,12 +355,14 @@ public class LayersMergeEngine implements OnExtractViewGroupListener, OnMergeFai
                 public void run() {
                     if (!removeTags.contains(tag)) {
                         if (!checkCanMerge()) {
-                            onCannotMerge(false);
+                            onCannotMerge(false, MergeStatusListener.FAILED_TYPE_NOT_READY);
                         } else {
                             LayersMergeManager manager = new LayersMergeManager(src, info, mzl, listener);
                             if (!manager.mergeChildrenLayers()) {
                                 layout.failTimes++;
-                                onCannotMerge(false);
+                                onCannotMerge(false, MergeStatusListener.FAILED_TYPE_TOO_MANY_ZERO_VIEWS);
+                            } else if (statusListener != null) {
+                                statusListener.onMergeSuccess(src, tag);
                             }
                         }
                     }
@@ -379,10 +392,10 @@ public class LayersMergeEngine implements OnExtractViewGroupListener, OnMergeFai
             mScheduler.postDelay(new NextAction(), DELAY);
         }
 
-        private void onCannotMerge(boolean postNext) {
-            if (layout.onMergeFailedListener != null) {
-                layout.onMergeFailedListener.onMergeFailed(layout.layout, layout.tag,
-                        layout.extractInfo, layout.failTimes);
+        private void onCannotMerge(boolean postNext, int type) {
+            if (layout.mergeStatusListener != null) {
+                layout.mergeStatusListener.onMergeFailed(layout.layout, layout.tag,
+                        layout.extractInfo, layout.failTimes, type);
             }
             final Object tag = layout.tag;
             if (!removeTags.contains(tag)) {
@@ -417,7 +430,7 @@ public class LayersMergeEngine implements OnExtractViewGroupListener, OnMergeFai
         int maxNotReadyCount = 3;
         int maxZeroLocCountWhenExtracting = 3;
         OnExtractViewGroupListener onExtractViewGroupListener;
-        OnMergeFailedListener onMergeFailedListener;
+        MergeStatusListener mergeStatusListener;
 
         int failTimes = 0;
 
@@ -448,8 +461,8 @@ public class LayersMergeEngine implements OnExtractViewGroupListener, OnMergeFai
             checkValid();
         }
 
-        public LayoutData withMergeFailedListener(OnMergeFailedListener listener) {
-            onMergeFailedListener = listener;
+        public LayoutData withMergeFailedListener(MergeStatusListener listener) {
+            mergeStatusListener = listener;
             return this;
         }
 

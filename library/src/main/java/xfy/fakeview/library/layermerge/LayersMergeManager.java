@@ -211,7 +211,7 @@ public class LayersMergeManager {
      */
     public boolean mergeChildrenLayers() {
         boolean result = extractViewFromParent(rootLayout);
-        addChildrenByLoc();
+        addChildrenByLoc(result);
         rootLayout = null;
         rootLoc = null;
         return result;
@@ -219,8 +219,9 @@ public class LayersMergeManager {
 
     /**
      * Add all children(View) into rootLayout with correct LayoutParams
+     * @param extractStatus status for extract before
      */
-    private void addChildrenByLoc() {
+    private void addChildrenByLoc(boolean extractStatus) {
         int childCount = childrens.size();
         int pl = rootLayout.getPaddingLeft();
         int pt = rootLayout.getPaddingTop();
@@ -228,6 +229,12 @@ public class LayersMergeManager {
             View child = childrens.get(i);
             if (child.getParent() != null)
                 continue;
+            if (!extractStatus) {
+                Object tag = child.getTag();
+                if (tag != null && tag instanceof Integer && (int) tag > 0) {
+                    continue;
+                }
+            }
             Loc childLoc = childrenLoc.get(i);
             FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(child.getLayoutParams());
             params.setMargins(childLoc.left - rootLoc.left - pl,
@@ -320,6 +327,7 @@ public class LayersMergeManager {
         if (flag == EXTRACT_NONE)
             return null;
         View result = null;
+        int tag = 0;
         if ((flag & EXTRACT_BACKGROUND) == EXTRACT_BACKGROUND) {
             Drawable background = null;
             if (childViewGroupBackgroundExtractor != null) {
@@ -328,6 +336,7 @@ public class LayersMergeManager {
                 background = src.getBackground();
             }
             if (background != null) {
+                tag |= EXTRACT_BACKGROUND;
                 result = createHolderViewForViewGroup(src);
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
                     result.setBackground(background);
@@ -339,6 +348,7 @@ public class LayersMergeManager {
         if ((flag & EXTRACT_CLICK_EVENT) == EXTRACT_CLICK_EVENT) {
             View.OnClickListener clickListener = EventExtractor.getViewOnClickListener(src);
             if (clickListener != null) {
+                tag |= EXTRACT_CLICK_EVENT;
                 result = result == null ? createHolderViewForViewGroup(src) : result;
                 result.setOnClickListener(clickListener);
             }
@@ -346,10 +356,13 @@ public class LayersMergeManager {
         if ((flag & EXTRACT_LONG_CLICK_EVENT) == EXTRACT_LONG_CLICK_EVENT) {
             View.OnLongClickListener longClickListener = EventExtractor.getViewOnLongClickListener(src);
             if (longClickListener != null) {
+                tag |= EXTRACT_LONG_CLICK_EVENT;
                 result = result == null ? createHolderViewForViewGroup(src) : result;
                 result.setOnLongClickListener(longClickListener);
             }
         }
+        if (result != null)
+            result.setTag(tag);
         return result;
     }
 
