@@ -27,4 +27,11 @@ public interface MergeStatusListener {
      * @param tag
      */
     void onMergeSuccess(FrameLayout layout, Object tag);
+
+    /**
+     * Called when merging action really start
+     * @param layout layout whitch is successfully merged
+     * @param tag
+     */
+    void onMergeStart(FrameLayout layout, Object tag);
 }
