@@ -62,9 +62,12 @@ public class LayersMergeManager {
      * Check view is ready
      */
     private static ViewReadyChecker mViewReadyChecker = new DefaultViewReadyChecker();
+    /**
+     * Get View loc
+     */
+    private static ViewRelativeLocationGetter viewRelativeLocationGetter = new DefaultViewRelativeLocationGetter();
 
     private FrameLayout rootLayout;
-    private Loc rootLoc;
     private int rootWidth, rootHeight;
 
     private ArrayList<View> childrens;
@@ -92,6 +95,12 @@ public class LayersMergeManager {
         if (viewReadyChecker == null)
             throw new NullPointerException("viewReadyChecker is null!");
         LayersMergeManager.mViewReadyChecker = viewReadyChecker;
+    }
+
+    public static void setViewRelativeLocationGetter(ViewRelativeLocationGetter viewRelativeLocationGetter) {
+        if (viewRelativeLocationGetter == null)
+            throw new NullPointerException("viewRelativeLocationGetter is null!");
+        LayersMergeManager.viewRelativeLocationGetter = viewRelativeLocationGetter;
     }
 
     /**
@@ -201,7 +210,6 @@ public class LayersMergeManager {
     public LayersMergeManager(FrameLayout parent, int flag, int maxZeroLocCount, OnExtractViewGroupListener listener) {
         this.extractFlag = flag;
         rootLayout = parent;
-        rootLoc = new Loc(getViewLocation(parent));
         rootWidth = parent.getWidth();
         rootHeight = parent.getHeight();
         childrens = new ArrayList<>();
@@ -219,7 +227,6 @@ public class LayersMergeManager {
         boolean result = extractViewFromParent(rootLayout);
         addChildrenByLoc(result);
         rootLayout = null;
-        rootLoc = null;
         return result;
     }
 
@@ -229,8 +236,6 @@ public class LayersMergeManager {
      */
     private void addChildrenByLoc(boolean extractStatus) {
         int childCount = childrens.size();
-        int pl = rootLayout.getPaddingLeft();
-        int pt = rootLayout.getPaddingTop();
         for (int i = 0 ; i < childCount ;i ++ ) {
             View child = childrens.get(i);
             if (child.getParent() != null)
@@ -243,8 +248,7 @@ public class LayersMergeManager {
             }
             Loc childLoc = childrenLoc.get(i);
             FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(child.getLayoutParams());
-            params.setMargins(childLoc.left - rootLoc.left - pl,
-                    childLoc.top - rootLoc.top - pt,0, 0);
+            params.setMargins(childLoc.left, childLoc.top,0, 0);
             rootLayout.addView(child, params);
         }
         ViewGroup.LayoutParams params = rootLayout.getLayoutParams();
@@ -376,10 +380,8 @@ public class LayersMergeManager {
         return holder;
     }
 
-    private static int[] getViewLocation(View view) {
-        int[] loc = new int[2];
-        view.getLocationInWindow(loc);
-        return loc;
+    private int[] getViewLocation(View view) {
+        return LayersMergeManager.viewRelativeLocationGetter.getViewRelativeLocation(view, rootLayout);
     }
 
     /**
