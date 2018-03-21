@@ -14,7 +14,7 @@ import xfy.fakeview.library.text.compiler.ClickSpanTextCompiler;
 import xfy.fakeview.library.text.compiler.DefaultTextCompiler;
 import xfy.fakeview.library.text.compiler.DrawableTextCompiler;
 import xfy.fakeview.library.text.compiler.ITextCompiler;
-import xfy.fakeview.library.text.compiler.SpecialCompiler;
+import xfy.fakeview.library.text.compiler.SpecialTextHelper;
 
 /**
  * Created by XiongFangyu on 2018/3/20.
@@ -23,30 +23,30 @@ public class StyleHelper {
     static enum Compiler {
         text_only {
             @Override
-            ITextCompiler getCompiler() {
+            ITextCompiler getCompiler(Context context) {
                 return DefaultTextCompiler.getCompiler();
             }
         },
         contain_image {
             @Override
-            ITextCompiler getCompiler() {
+            ITextCompiler getCompiler(Context context) {
                 return DrawableTextCompiler.getCompiler();
             }
         },
         click_span {
             @Override
-            ITextCompiler getCompiler() {
+            ITextCompiler getCompiler(Context context) {
                 return ClickSpanTextCompiler.getCompiler();
             }
         },
         spcial_text {
             @Override
-            ITextCompiler getCompiler() {
-                return SpecialCompiler.getCompiler();
+            ITextCompiler getCompiler(Context context) {
+                return SpecialTextHelper.getSpecialCompiler(context);
             }
         },
         ;
-        abstract ITextCompiler getCompiler();
+        abstract ITextCompiler getCompiler(Context context);
     }
     public int maxLines = -1;
     public int textSize = -1;
@@ -73,11 +73,11 @@ public class StyleHelper {
             appearance = theme.obtainStyledAttributes(
                     ap, R.styleable.FNewTextView);
         }
-        initStyle(appearance);
-        initStyle(a);
+        initStyle(context, appearance);
+        initStyle(context, a);
     }
 
-    private void initStyle(TypedArray appearance){
+    private void initStyle(Context context, TypedArray appearance){
         if (appearance != null) {
             final int len = appearance.getIndexCount();
             for (int i = 0 ; i < len ; i ++) {
@@ -99,20 +99,20 @@ public class StyleHelper {
                 } else if (attr == R.styleable.FNewTextView_fntv_measure_when_set_text) {
                     measureWhenSetText = appearance.getBoolean(attr, measureWhenSetText);
                 } else if (attr == R.styleable.FNewTextView_fntv_text_compiler) {
-                    setTextCompiler(appearance, attr);
+                    setTextCompiler(context, appearance, attr);
                 }
             }
             appearance.recycle();
         }
     }
 
-    private void setTextCompiler(TypedArray a, int attr) {
+    private void setTextCompiler(Context context, TypedArray a, int attr) {
         try {
             int e = a.getInt(attr, -1);
             if (e >= 0) {
                 Compiler[] compilers = Compiler.values();
                 if (e < compilers.length) {
-                    textCompiler = compilers[e].getCompiler();
+                    textCompiler = compilers[e].getCompiler(context);
                     return;
                 }
             }

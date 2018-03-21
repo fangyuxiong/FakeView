@@ -90,6 +90,18 @@ public class NewTextView extends View implements FTextDrawable.LayoutRequestList
         textDrawable.setDrawableScale(scale);
     }
 
+    public void setUnderLineText(boolean underline) {
+        textDrawable.setUnderLineText(underline);
+    }
+
+    public void setBoldText(boolean bold) {
+        textDrawable.setBoldText(bold);
+    }
+
+    public void setItalicText(boolean italic) {
+        textDrawable.setItalicText(italic);
+    }
+
     public void setText(CharSequence text) {
         textDrawable.setText(text);
     }
