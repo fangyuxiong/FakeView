@@ -23,6 +23,7 @@ import xfy.fakeview.library.text.utils.MeasureTextUtils;
  */
 public class TextDrawer {
     private static final String TAG = "Fake--TextDrawer";
+    private static Paint.FontMetricsInt fontMetricsInt;
     private static boolean DEBUG = false;
     private static Paint debugPaint;
 
@@ -44,6 +45,13 @@ public class TextDrawer {
         if (!DEBUG)
             return;
         canvas.drawLine(x0, y0, x1, y1, debugPaint);
+    }
+
+    private static Paint.FontMetricsInt getFontMetricsInt() {
+        if (fontMetricsInt == null) {
+            fontMetricsInt = new Paint.FontMetricsInt();
+        }
+        return fontMetricsInt;
     }
 
     /**
@@ -333,7 +341,8 @@ public class TextDrawer {
      * @return 第一行baseline
      */
     public static int getLineInfo(TextPaint paint, int drawableSize, boolean includePad) {
-        Paint.FontMetricsInt fontMetricsInt = paint.getFontMetricsInt();
+        Paint.FontMetricsInt fontMetricsInt = getFontMetricsInt();
+        paint.getFontMetricsInt(fontMetricsInt);
         int top = getFontHeightCalTop(fontMetricsInt, includePad);
         int bot = getFontHeightCalBottom(fontMetricsInt, includePad);
         int fh = bot - top;
@@ -345,7 +354,9 @@ public class TextDrawer {
     }
 
     public static int getFontHeight(TextPaint paint, boolean includePad) {
-        return getFontHeight(paint.getFontMetricsInt(), includePad);
+        Paint.FontMetricsInt fontMetricsInt = getFontMetricsInt();
+        paint.getFontMetricsInt(fontMetricsInt);
+        return getFontHeight(fontMetricsInt, includePad);
     }
 
     public static int getFontHeight(Paint.FontMetricsInt fontMetricsInt, boolean includePad) {
