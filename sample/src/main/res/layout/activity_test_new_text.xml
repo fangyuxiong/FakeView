@@ -46,8 +46,9 @@
         android:maxLines="2"
         android:textColor="#fff"
         android:lineSpacingExtra="10px"
+        android:text="hahaha(font weight='800')我的天(/font)hehehe"
         app:fntv_drawable_scale="1"
-        app:fntv_text_compiler="click_span"
+        app:fntv_text_compiler="spcial_text"
         android:padding="10dp"
         android:background="#af00"/>
 

@@ -6,6 +6,7 @@ import android.graphics.ColorFilter;
 import android.graphics.Paint;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
+import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -116,6 +117,8 @@ public class FTextDrawable extends Drawable {
     }
 
     public void setText(CharSequence text) {
+        if (TextUtils.isEmpty(text))
+            text = null;
         if (mText == null && text == null)
             return;
         if (mText != null && mText.equals(text))
@@ -142,6 +145,41 @@ public class FTextDrawable extends Drawable {
 
     public void setLayoutRequestListener(LayoutRequestListener listener) {
         listenerRef = new WeakReference<LayoutRequestListener>(listener);
+    }
+
+    public void setUnderLineText(boolean underline) {
+        mTextPaint.setUnderlineText(underline);
+        needMeasureTextLines = true;
+        if (autoMeasure)
+            measure();
+        requestLayout();
+        invalidateSelf();
+    }
+
+    public void setBoldText(boolean bold) {
+        if (bold) {
+            TextDrawer.apply(mTextPaint, Typeface.BOLD);
+        } else {
+            TextDrawer.clear(mTextPaint, Typeface.BOLD);
+        }
+        needMeasureTextLines = true;
+        if (autoMeasure)
+            measure();
+        requestLayout();
+        invalidateSelf();
+    }
+
+    public void setItalicText(boolean italic) {
+        if (italic) {
+            TextDrawer.apply(mTextPaint, Typeface.ITALIC);
+        } else {
+            TextDrawer.clear(mTextPaint, Typeface.ITALIC);
+        }
+        needMeasureTextLines = true;
+        if (autoMeasure)
+            measure();
+        requestLayout();
+        invalidateSelf();
     }
 
     public void setDrawableSize(int drawableSize) {
