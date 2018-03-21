@@ -10,7 +10,6 @@ import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 
 import xfy.fakeview.library.DebugInfo;
 import xfy.fakeview.library.FViewCreater;
@@ -138,7 +137,8 @@ public class MainActivity extends Activity implements IFView.OnClickListener, IF
     public void onClick(IFView view) {
         switch (view.getId()) {
             case 1:
-                Toast.makeText(this, "container click", Toast.LENGTH_LONG).show();
+//                Toast.makeText(this, "container click", Toast.LENGTH_LONG).show();
+                startActivity(new Intent(this, TestNewTextActivity.class));
                 break;
             case 2:
                 startActivity(new Intent(this, TestTranslateActivity.class));

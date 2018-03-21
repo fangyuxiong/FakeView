@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="FNewTextView">
+        <attr name="fntv_style" format="reference"/>
+        <attr name="fntv_drawable_size" format="dimension"/>
+        <attr name="fntv_drawable_scale" format="float"/>
+        <attr name="fntv_measure_when_set_text" format="boolean"/>
+        <attr name="fntv_text_compiler" format="string|enum">
+            <enum name="text_only" value="0"/>
+            <enum name="contain_image" value="1"/>
+            <enum name="click_span" value="2"/>
+            <enum name="spcial_text" value="3"/>
+        </attr>
+        <attr name="android:lineSpacingExtra"/>
+        <attr name="android:textSize"/>
+        <attr name="android:maxLines"/>
+        <attr name="android:textColor"/>
+        <attr name="android:text"/>
+    </declare-styleable>
+</resources>
