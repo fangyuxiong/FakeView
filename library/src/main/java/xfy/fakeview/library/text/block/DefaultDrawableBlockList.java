@@ -65,6 +65,7 @@ public class DefaultDrawableBlockList extends ArrayList<DefaultDrawableBlock> im
     }
 
     private void recycle() {
+        lines = 0;
         lineFlags = null;
         hasSpan = false;
         mNewLineCount = 0;
