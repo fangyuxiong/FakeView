@@ -115,6 +115,18 @@ public class NewTextView extends View implements FTextDrawable.LayoutRequestList
     }
 
     @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        textDrawable.onAttachedToWindow();
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        textDrawable.onDetachedFromWindow();
+    }
+
+    @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         if (!textDrawable.isAutoMeasure()) {
             textDrawable.measure();

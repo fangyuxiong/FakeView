@@ -34,7 +34,7 @@ import xfy.fakeview.library.text.utils.MeasureTextUtils;
 public class FTextDrawable extends Drawable {
     private static final String TAG = "Fake--TextDrawable";
 
-    private int lineSpace = 10;
+    private int lineSpace = 0;
     private int maxWidth;
     private int maxHeight;
     private CharSequence mText;
@@ -148,23 +148,7 @@ public class FTextDrawable extends Drawable {
         if (mText != null && mText.equals(text))
             return;
         mText = text;
-        if (compiler != null) {
-            if (blockList != null) {
-                blockList.notUse();
-            }
-            if (text == null) {
-                blockList = null;
-            } else {
-                blockList = compiler.compile(text);
-            }
-        } else {
-            throw new NullPointerException("compiler is null, please set compiler before set text!");
-        }
-        needMeasureTextLines = true;
-        if (autoMeasure)
-            measure();
-        requestLayout();
-        invalidateSelf();
+        onTextSetted();
     }
 
     public void setLayoutRequestListener(LayoutRequestListener listener) {
@@ -304,6 +288,19 @@ public class FTextDrawable extends Drawable {
             return blockList.onTouchEvent(v, event, immutableParams);
         return false;
     }
+
+    public void onAttachedToWindow() {
+        if (blockList == null && mText != null) {
+            onTextSetted();
+        }
+    }
+
+    public void onDetachedFromWindow() {
+        if (blockList != null) {
+            blockList.notUse();
+        }
+        blockList = null;
+    }
     //</editor-folder>
 
     //<editor-folder desc="drawable method">
@@ -314,7 +311,7 @@ public class FTextDrawable extends Drawable {
             invalidateSelf();
             return;
         }
-        if (mText == null || lines == 0)
+        if (mText == null || lines == 0 || blockList == null)
             return;
         final Rect bounds = getBounds();
         final int left = bounds.left;
@@ -355,6 +352,26 @@ public class FTextDrawable extends Drawable {
     //</editor-folder>
 
     //<editor-folder desc="private method">
+    private void onTextSetted() {
+        if (compiler != null) {
+            if (blockList != null) {
+                blockList.notUse();
+            }
+            if (mText == null) {
+                blockList = null;
+            } else {
+                blockList = compiler.compile(mText);
+            }
+        } else {
+            throw new NullPointerException("compiler is null, please set compiler before set text!");
+        }
+        needMeasureTextLines = true;
+        if (autoMeasure)
+            measure();
+        requestLayout();
+        invalidateSelf();
+    }
+
     private void initParamsBeforeDraw() {
         final Rect bounds = getBounds();
         final int left = bounds.left;
