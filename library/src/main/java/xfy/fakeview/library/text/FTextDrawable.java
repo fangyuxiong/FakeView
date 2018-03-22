@@ -51,6 +51,8 @@ public class FTextDrawable extends Drawable {
     protected int drawableSize;
     protected boolean includePad = true;
 
+    private boolean drawableSizeSetted = false;
+
     protected final VariableParams variableParams;
     protected final ImmutableParams immutableParams;
 
@@ -191,6 +193,7 @@ public class FTextDrawable extends Drawable {
     }
 
     public void setDrawableSize(int drawableSize) {
+        drawableSizeSetted = true;
         if (this.drawableSize != drawableSize) {
             this.drawableSize = drawableSize;
             needMeasureTextLines = true;
@@ -258,7 +261,7 @@ public class FTextDrawable extends Drawable {
         if (mTextPaint.getTextSize() != textSize) {
             mTextPaint.setTextSize(textSize);
             needMeasureTextLines = true;
-            if (drawableSize == 0)
+            if (!drawableSizeSetted)
                 drawableSize = (int) textSize;
             ellipsizeLength = TextDrawer.getEllipsizeLength(mTextPaint);
             if (mText != null) {
