@@ -110,6 +110,10 @@ public class NewTextView extends View implements FTextDrawable.LayoutRequestList
         textDrawable.setGravity(gravity);
     }
 
+    public void setInlucdePad(boolean inlucdePad) {
+        textDrawable.setIncludePad(inlucdePad);
+    }
+
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         if (!textDrawable.isAutoMeasure()) {

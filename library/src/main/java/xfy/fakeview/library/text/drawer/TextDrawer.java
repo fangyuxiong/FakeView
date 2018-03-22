@@ -280,32 +280,19 @@ public class TextDrawer {
     private static void toNewDrawLine(@NonNull VariableParams variableParams, @NonNull ImmutableParams immutableParams) {
         variableParams.currentDrawLine++;
         final TextUtils.TruncateAt ellipsize = immutableParams.truncateAt;
-//        final int lines = immutableParams.lines;
-//        final int needDrawLine = immutableParams.needDrawLine;
         final int[] lineInfos = immutableParams.lineInfos;
         int lh = 0;
         if (lineInfos != null) {
             int lastBaseLine = LineUtils.getBaseLine(lineInfos, variableParams.currentDrawLine - 1);
             int nextBaseLine = LineUtils.getBaseLine(lineInfos, variableParams.currentDrawLine);
             nextBaseLine = nextBaseLine < 0 ? 0 : nextBaseLine;
-            int nextHeight = LineUtils.getLineHeight(lineInfos, variableParams.currentDrawLine);
-            nextHeight = nextHeight < 0 ? 0 : nextHeight;
-            lh = nextHeight + nextBaseLine - lastBaseLine;
+            int lastHeight = LineUtils.getLineHeight(lineInfos, variableParams.currentDrawLine - 1);
+            lastHeight = lastHeight < 0 ? 0 : lastHeight;
+            lh = lastHeight + nextBaseLine - lastBaseLine;
         }
         final int addOn = immutableParams.lineSpace;
         if (ellipsize != null) {
             variableParams.currentBaseline += lh + addOn;
-//            if (ellipsize == TextUtils.TruncateAt.START) {
-//                if (variableParams.currentDrawLine > lines - needDrawLine + 1) {
-//                    variableParams.currentBaseline += fontHeight + addOn;
-//                }
-//            } else if (ellipsize == TextUtils.TruncateAt.MIDDLE) {
-//                if (!variableParams.isExecutedMiddleEllipsize || variableParams.middleEllipsizeWidthRecord == -1) {
-//                    variableParams.currentBaseline += fontHeight + addOn;
-//                }
-//            } else {
-//                variableParams.currentBaseline += fontHeight + addOn;
-//            }
         } else {
             variableParams.currentBaseline += lh + addOn;
         }
@@ -348,7 +335,7 @@ public class TextDrawer {
 
     public static long measureText(TextPaint textPaint, IDrawableBlockList list, int drawableSize,
                                    int currentLeft, int left, int right, boolean includePad) {
-        return list.measure(textPaint, getLineInfo(textPaint, drawableSize, includePad), drawableSize, currentLeft, 0, left, right);
+        return list.measure(textPaint, getLineInfo(textPaint, drawableSize, includePad), drawableSize, currentLeft, 0, left, right, includePad);
     }
 
     /**
@@ -367,6 +354,7 @@ public class TextDrawer {
         int baseLine = -top;
         if (fh < drawableSize) {
             baseLine += (drawableSize - fh) >> 1;
+            fh = drawableSize;
         }
         return LineUtils.combime(fh, baseLine);
     }

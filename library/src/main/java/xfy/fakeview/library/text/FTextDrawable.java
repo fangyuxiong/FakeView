@@ -49,6 +49,7 @@ public class FTextDrawable extends Drawable {
     protected boolean isNeedEllipsize;
     protected int ellipsizeLength;
     protected int drawableSize;
+    protected boolean includePad = true;
 
     protected final VariableParams variableParams;
     protected final ImmutableParams immutableParams;
@@ -82,7 +83,7 @@ public class FTextDrawable extends Drawable {
         if (helper.textSize > 0) {
             setTextSize(helper.textSize);
         }
-        if (helper.lineSpace > 0) {
+        if (helper.lineSpace >= 0) {
             setLineSpace(helper.lineSpace);
         }
         if (helper.textColor != 0) {
@@ -121,6 +122,19 @@ public class FTextDrawable extends Drawable {
         if (immutableParams.gravity != gravity) {
             immutableParams.gravity = gravity;
             if (mText != null) {
+                invalidateSelf();
+            }
+        }
+    }
+
+    public void setIncludePad(boolean includePad) {
+        if (this.includePad != includePad) {
+            this.includePad = includePad;
+            if (mText != null) {
+                needMeasureTextLines = true;
+                if (autoMeasure)
+                    measure();
+                requestLayout();
                 invalidateSelf();
             }
         }
@@ -336,7 +350,7 @@ public class FTextDrawable extends Drawable {
     @Override
     public int getIntrinsicHeight() {
         int flags[] = blockList != null ? blockList.getLinesHeight() : null;
-        return flags != null ? LineUtils.getAllLineHeight(flags, needDrawLines) : 0;
+        return flags != null ? LineUtils.getAllLineHeight(flags, needDrawLines) + lineSpace * (needDrawLines - 1): 0;
     }
     //</editor-folder>
 
@@ -397,7 +411,7 @@ public class FTextDrawable extends Drawable {
         if (maxWidth == 0) {
             maxWidth = bounds.width();
         }
-        long flag = TextDrawer.measureText(mTextPaint, blockList, drawableSize, left, left, left + maxWidth, true);
+        long flag = TextDrawer.measureText(mTextPaint, blockList, drawableSize, left, left, left + maxWidth, includePad);
         if (MeasureTextUtils.getState(flag) == MeasureTextUtils.STATE_SUCCESS) {
             textWidth = MeasureTextUtils.getMaxWidth(flag);
             lines = MeasureTextUtils.getLines(flag);

@@ -219,7 +219,7 @@ public class DefaultDrawableBlockList extends ArrayList<DefaultDrawableBlock> im
     }
 
     @Override
-    public long measure(TextPaint textPaint, int lineInfo, int drawableSize, int currentLeft, int currentTop, int left, int right) {
+    public long measure(TextPaint textPaint, int lineInfo, int drawableSize, int currentLeft, int currentTop, int left, int right, boolean includePad) {
         if (drawableSize == lastDrawableSize && lastCLeft == currentLeft && lastLeft == left && lastRight == right && lastFlag != 0) {
             return lastFlag;
         }
@@ -229,7 +229,7 @@ public class DefaultDrawableBlockList extends ArrayList<DefaultDrawableBlock> im
             IDrawableBlock block = get(i);
             if (block == null)
                 continue;
-            long bf = block.measure(textPaint, lineInfo, drawableSize, currentLeft, currentTop, left, right);
+            long bf = block.measure(textPaint, lineInfo, drawableSize, currentLeft, currentTop, left, right, includePad);
             int state = bf == 0 ? MeasureTextUtils.STATE_ERROR : MeasureTextUtils.getState(bf);
             if (state == MeasureTextUtils.STATE_SUCCESS) {
                 int cl = MeasureTextUtils.getLines(flag);

@@ -112,7 +112,7 @@ public class DefaultDrawableBlock implements IDrawableBlock<DefaultDrawableBlock
     }
 
     @Override
-    public long measure(TextPaint textPaint, int lineInfo, int drawableSize, int currentLeft, int currentTop, int left, int right) {
+    public long measure(TextPaint textPaint, int lineInfo, int drawableSize, int currentLeft, int currentTop, int left, int right, boolean includePad) {
         int fontHeight = LineUtils.getLineHeight(lineInfo);
         this.baseLine = LineUtils.getBaseLine(lineInfo);
         this.left = currentLeft;
@@ -123,7 +123,7 @@ public class DefaultDrawableBlock implements IDrawableBlock<DefaultDrawableBlock
                 if (textStyleParams != null && textStyleParams.hasTextSize) {
                     textPaint.setTextSize(textStyleParams.textSize);
                     if (textStyleParams.textSize > oldTextSize) {
-                        int flag = TextDrawer.getLineInfo(textPaint, drawableSize, true);
+                        int flag = TextDrawer.getLineInfo(textPaint, drawableSize, includePad);
                         fontHeight = LineUtils.getLineHeight(flag);
                         baseLine = LineUtils.getBaseLine(flag);
                     }
@@ -153,7 +153,7 @@ public class DefaultDrawableBlock implements IDrawableBlock<DefaultDrawableBlock
                 DefaultDrawableBlockList children = getChildren();
                 if (children == null)
                     flag = 0;
-                flag = children.measure(textPaint, lineInfo, drawableSize, currentLeft, currentTop, left, right);
+                flag = children.measure(textPaint, lineInfo, drawableSize, currentLeft, currentTop, left, right, includePad);
                 break;
         }
         return flag;
