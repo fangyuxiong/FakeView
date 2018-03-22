@@ -97,6 +97,7 @@ public class FTextDrawable extends Drawable {
         if (!TextUtils.isEmpty(helper.text)) {
             setText(helper.text);
         }
+        setGravity(helper.gravity);
     }
 
     //<editor-folder desc="public method">
@@ -114,6 +115,15 @@ public class FTextDrawable extends Drawable {
 
     public ITextCompiler getCompiler() {
         return this.compiler;
+    }
+
+    public void setGravity(int gravity) {
+        if (immutableParams.gravity != gravity) {
+            immutableParams.gravity = gravity;
+            if (mText != null) {
+                invalidateSelf();
+            }
+        }
     }
 
     public void setText(CharSequence text) {
@@ -186,7 +196,7 @@ public class FTextDrawable extends Drawable {
         if (this.drawableSize != drawableSize) {
             this.drawableSize = drawableSize;
             needMeasureTextLines = true;
-            if (!TextUtils.isEmpty(mText)) {
+            if (mText != null) {
                 if (autoMeasure)
                     measure();
                 requestLayout();
@@ -203,7 +213,7 @@ public class FTextDrawable extends Drawable {
     public void setTextColor(int textColor) {
         if (mTextPaint.getColor() != textColor) {
             mTextPaint.setColor(textColor);
-            if (!TextUtils.isEmpty(mText))
+            if (mText != null)
                 invalidateSelf();
         }
     }
@@ -211,7 +221,7 @@ public class FTextDrawable extends Drawable {
     public void setLineSpace(int lineSpace) {
         if (this.lineSpace != lineSpace) {
             this.lineSpace = lineSpace;
-            if (!TextUtils.isEmpty(mText)) {
+            if (mText != null) {
                 if (autoMeasure)
                     measure();
                 requestLayout();
@@ -224,7 +234,7 @@ public class FTextDrawable extends Drawable {
         maxWidth = maxWidth < 0 ? 0 : maxWidth;
         if (this.maxWidth != maxWidth) {
             this.maxWidth = maxWidth;
-            if (!TextUtils.isEmpty(mText)) {
+            if (mText != null) {
                 if (autoMeasure)
                     measure();
                 requestLayout();
@@ -237,7 +247,7 @@ public class FTextDrawable extends Drawable {
         maxHeight = maxHeight < 0 ? 0 : maxHeight;
         if (this.maxHeight != maxHeight) {
             this.maxHeight = maxHeight;
-            if (!TextUtils.isEmpty(mText)) {
+            if (mText != null) {
                 if (autoMeasure)
                     measure();
                 requestLayout();
@@ -253,7 +263,7 @@ public class FTextDrawable extends Drawable {
             if (drawableSize == 0)
                 drawableSize = (int) textSize;
             ellipsizeLength = TextDrawer.getEllipsizeLength(mTextPaint);
-            if (!TextUtils.isEmpty(mText)) {
+            if (mText != null) {
                 if (autoMeasure)
                     measure();
                 requestLayout();
@@ -266,7 +276,7 @@ public class FTextDrawable extends Drawable {
         maxLines = maxLines < 1 ? 1 : maxLines;
         if (this.maxLines != maxLines) {
             this.maxLines = maxLines;
-            if (!TextUtils.isEmpty(mText)) {
+            if (mText != null) {
                 if (autoMeasure)
                     measure();
                 requestLayout();
@@ -300,8 +310,7 @@ public class FTextDrawable extends Drawable {
         initParamsBeforeDraw();
         if (needDrawLines <= 0)
             return;
-        drawBlockList(canvas);
-//        TextDrawer.drawText(canvas, mText, variableParams, immutableParams, null);
+        blockList.draw(canvas, variableParams, immutableParams);
     }
 
     @Override
@@ -362,13 +371,6 @@ public class FTextDrawable extends Drawable {
         immutableParams.ellipsizeLength = ellipsizeLength;
         immutableParams.paint = mTextPaint;
         immutableParams.lineInfos = flags;
-    }
-
-    private void drawBlockList(Canvas canvas) {
-        int len = blockList.size();
-        for (int i = 0; i < len; i ++) {
-            blockList.get(i).draw(canvas, variableParams, immutableParams);
-        }
     }
 
     public void measure() {

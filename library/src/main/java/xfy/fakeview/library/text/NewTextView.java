@@ -106,6 +106,10 @@ public class NewTextView extends View implements FTextDrawable.LayoutRequestList
         textDrawable.setText(text);
     }
 
+    public void setGravity(int gravity) {
+        textDrawable.setGravity(gravity);
+    }
+
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         if (!textDrawable.isAutoMeasure()) {

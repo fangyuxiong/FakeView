@@ -16,5 +16,6 @@
         <attr name="android:maxLines"/>
         <attr name="android:textColor"/>
         <attr name="android:text"/>
+        <attr name="android:gravity"/>
     </declare-styleable>
 </resources>

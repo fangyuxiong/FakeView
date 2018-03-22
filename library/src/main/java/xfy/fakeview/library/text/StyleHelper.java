@@ -6,6 +6,7 @@ import android.content.res.TypedArray;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.AttributeSet;
+import android.view.Gravity;
 
 import java.lang.reflect.Method;
 
@@ -52,6 +53,7 @@ public class StyleHelper {
     public int textSize = -1;
     public int lineSpace = -1;
     public int textColor = 0;
+    public int gravity = Gravity.TOP | Gravity.LEFT;
     public float drawableScale = 1;
     public int drawableSize = -1;
     public CharSequence text;
@@ -90,7 +92,9 @@ public class StyleHelper {
                     maxLines = appearance.getInt(attr, maxLines);
                 } else if (attr == R.styleable.FNewTextView_android_textColor) {
                     textColor = appearance.getColor(attr, textColor);
-                } else if (attr == R.styleable.FNewTextView_fntv_drawable_scale) {
+                } else if (attr == R.styleable.FNewTextView_android_gravity) {
+                    gravity = appearance.getInt(attr, gravity);
+                }else if (attr == R.styleable.FNewTextView_fntv_drawable_scale) {
                     drawableScale = appearance.getFloat(attr, drawableScale);
                 } else if (attr == R.styleable.FNewTextView_fntv_drawable_size) {
                     drawableSize = appearance.getDimensionPixelSize(attr, drawableSize);

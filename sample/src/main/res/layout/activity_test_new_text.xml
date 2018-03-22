@@ -40,8 +40,8 @@
 
     <xfy.fakeview.library.text.NewTextView
         android:id="@+id/new_text"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
         android:textSize="15sp"
         android:maxLines="2"
         android:textColor="#fff"
