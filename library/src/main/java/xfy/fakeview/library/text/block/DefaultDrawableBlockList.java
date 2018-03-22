@@ -141,6 +141,8 @@ public class DefaultDrawableBlockList extends ArrayList<DefaultDrawableBlock> im
     private void traslateCanvas(Canvas canvas, ImmutableParams params) {
         final int textWidth = MeasureTextUtils.getMaxWidth(lastFlag);
         final int textHeight = getAllLineHeight(params);
+        if (textHeight == 0)
+            return;
         final int gravity = params.gravity;
         long flag = SimpleGravity.apply(gravity, params.left, params.top, params.right, params.bottom, textWidth, textHeight);
         int tx = SimpleGravity.getLeft(flag) - params.left;
@@ -152,6 +154,8 @@ public class DefaultDrawableBlockList extends ArrayList<DefaultDrawableBlock> im
 
     private int getAllLineHeight(ImmutableParams params) {
         final int[] lineInfo = params.lineInfos;
+        if (lineInfo == null)
+            return 0;
         final int needDrawLine = params.needDrawLine;
         final int space = params.lineSpace;
         return LineUtils.getAllLineHeight(lineInfo, needDrawLine) + (needDrawLine - 1) * space;
