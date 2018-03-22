@@ -1,5 +1,6 @@
 package xfy.fakeview.library.text.block;
 
+import android.graphics.Canvas;
 import android.support.annotation.NonNull;
 import android.text.TextPaint;
 import android.util.Log;
@@ -10,8 +11,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import xfy.fakeview.library.text.param.ImmutableParams;
+import xfy.fakeview.library.text.param.VariableParams;
 import xfy.fakeview.library.text.utils.LineUtils;
 import xfy.fakeview.library.text.utils.MeasureTextUtils;
+import xfy.fakeview.library.text.utils.SimpleGravity;
 
 /**
  * Created by XiongFangyu on 2018/3/2.
@@ -122,6 +125,35 @@ public class DefaultDrawableBlockList extends ArrayList<DefaultDrawableBlock> im
             }
         }
         return false;
+    }
+
+    @Override
+    public void draw(Canvas canvas, @NonNull VariableParams variableParams, @NonNull ImmutableParams immutableParams) {
+        canvas.save();
+        traslateCanvas(canvas, immutableParams);
+        for (int i = 0, l = size(); i < l; i ++) {
+            get(i).draw(canvas, variableParams, immutableParams);
+        }
+        canvas.restore();
+    }
+
+    private void traslateCanvas(Canvas canvas, ImmutableParams params) {
+        final int textWidth = MeasureTextUtils.getMaxWidth(lastFlag);
+        final int textHeight = getAllLineHeight(params);
+        final int gravity = params.gravity;
+        long flag = SimpleGravity.apply(gravity, params.left, params.top, params.right, params.bottom, textWidth, textHeight);
+        int tx = SimpleGravity.getLeft(flag) - params.left;
+        int ty = SimpleGravity.getTop(flag) - params.top;
+        if (tx == 0 && ty == 0)
+            return;
+        canvas.translate(tx, ty);
+    }
+
+    private int getAllLineHeight(ImmutableParams params) {
+        final int[] lineInfo = params.lineInfos;
+        final int needDrawLine = params.needDrawLine;
+        final int space = params.lineSpace;
+        return LineUtils.getAllLineHeight(lineInfo, needDrawLine) + (needDrawLine - 1) * space;
     }
 
     @Override

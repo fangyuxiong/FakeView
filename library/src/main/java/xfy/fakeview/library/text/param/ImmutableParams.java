@@ -2,6 +2,7 @@ package xfy.fakeview.library.text.param;
 
 import android.text.TextPaint;
 import android.text.TextUtils;
+import android.view.Gravity;
 
 /**
  * 不可变参数
@@ -16,6 +17,8 @@ public class ImmutableParams {
     public int top;
     //可绘制区域的下边坐标
     public int bottom;
+    //文字gravity
+    public int gravity = Gravity.LEFT | Gravity.TOP;
     //图片高度
     public int drawableHeight;
     //省略号的位置
