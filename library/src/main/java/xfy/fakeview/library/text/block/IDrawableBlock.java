@@ -33,7 +33,7 @@ public interface IDrawableBlock<T extends IDrawableBlockList> {
 
     T getChildren();
 
-    long measure(TextPaint textPaint, int baseLine, int drawableSize, int currentLeft, int currentTop, int left, int right);
+    long measure(TextPaint textPaint, int baseLine, int drawableSize, int currentLeft, int currentTop, int left, int right, boolean includePad);
 
     boolean draw(Canvas canvas, @NonNull VariableParams variableParams, @NonNull ImmutableParams immutableParams);
 

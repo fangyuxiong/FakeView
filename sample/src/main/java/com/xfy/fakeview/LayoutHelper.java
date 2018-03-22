@@ -24,7 +24,7 @@ public class LayoutHelper {
     }
 
     public static StaticLayout newLayout(CharSequence text, TextPaint paint, int maxWidth) {
-        return new StaticLayout(text, paint, maxWidth, Layout.Alignment.ALIGN_NORMAL, 1, 0, true);
+        return new StaticLayout(text, paint, maxWidth, Layout.Alignment.ALIGN_NORMAL, 1, 0, false);
     }
 
     public static CharSequence newSpan(String text, int ds) {

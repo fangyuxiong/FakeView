@@ -33,7 +33,7 @@ public interface IDrawableBlockList<E extends IDrawableBlock> extends List<E> {
 
     int getFlagSize();
 
-    long measure(TextPaint textPaint, int lineInfo, int drawableSize, int currentLeft, int currentTop, int left, int right);
+    long measure(TextPaint textPaint, int lineInfo, int drawableSize, int currentLeft, int currentTop, int left, int right, boolean includePad);
 
     void use();
 

@@ -92,6 +92,7 @@ public class TestNewTextActivity extends Activity {
         normal_text.setMaxHeight(150);
         normal_text.setTextSize(TypedValue.COMPLEX_UNIT_PX, 50);
         layoutTextView.setTextSize(50);
+        newTextView2.setInlucdePad(false);
 
         DrawableTextCompiler.getCompiler().setResourceAdapter(new DefaultResourceAdapter());
 
