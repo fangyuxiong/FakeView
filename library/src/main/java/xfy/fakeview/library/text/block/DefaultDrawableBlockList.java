@@ -250,6 +250,8 @@ public class DefaultDrawableBlockList extends ArrayList<DefaultDrawableBlock> im
                     if (lineHeight > lh) {
                         lineStart --;
                         saveLineHeight(lineHeight, block.getBaseLine(), lineStart, lineStart + blines - 1);
+                    } else if (blines > 1){
+                        saveLineHeight(lineHeight, block.getBaseLine(), lineStart, lineStart + blines - 2);
                     }
                 } else if (blines > 1) {
                     saveLineHeight(lineHeight, block.getBaseLine(), lineStart, lineStart + blines - 2);

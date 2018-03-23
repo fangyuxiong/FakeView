@@ -43,6 +43,7 @@ subprojects {
             classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.2'
             classpath 'com.github.dcendents:android-maven-gradle-plugin:2.0'
         }
+        libVersion="0.58"
     }
 }
 

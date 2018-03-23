@@ -297,6 +297,7 @@ public class TextDrawer {
             variableParams.currentBaseline += lh + addOn;
         }
         variableParams.currentLeft = immutableParams.left;
+        variableParams.currentTop += lh + addOn;
     }
 
     /**

@@ -8,6 +8,7 @@
     <EditText
         android:id="@+id/edit"
         android:layout_width="match_parent"
+        android:text="h1(font size='30px' color='white' weight='600' background='blue')今天天气真好，晚上来家坐坐呀(/font)h2(font size='100px' color='red' weight='800')@王先asfsadfsdfsadfds生(/font)h3"
         android:layout_height="50dp" />
 
     <Button
@@ -40,13 +41,13 @@
 
     <xfy.fakeview.library.text.NewTextView
         android:id="@+id/new_text"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textSize="15sp"
-        android:maxLines="2"
-        android:textColor="#fff"
-        android:lineSpacingExtra="10px"
-        android:text="hahaha(font weight='800')我的天(/font)hehehe"
+        android:maxLines="5"
+        android:textColor="#000"
+        android:lineSpacingExtra="0px"
+        android:text="h1(font size='30px' color='white' weight='600' background='blue')今天天气真好，晚上来家坐坐呀(/font)h2(font size='100px' color='red' weight='800')@王先asfsadfsdfsadfds生(/font)h3"
         app:fntv_drawable_scale="1"
         app:fntv_text_compiler="spcial_text"
         android:background="#af00"/>
@@ -67,8 +68,12 @@
         android:id="@+id/normal_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:padding="10dp"
-        android:background="#a0f0" />
+        android:background="#aff0"
+        android:textSize="15sp"
+        android:maxLines="5"
+        android:textColor="#000"
+        android:text="h1(font size='30px' color='white' weight='600' background='blue')今天天气真好，晚上来家坐坐呀(/font)h2(font size='100px' color='red' weight='800')@王先asfsadfsdfsadfds生(/font)h3"
+        android:lineSpacingExtra="10px" />
 
     <com.xfy.fakeview.LayoutTextView
         android:id="@+id/layout_text"

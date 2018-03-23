@@ -61,20 +61,22 @@ public class DrawableTextCompiler extends DefaultTextCompiler {
                 if (haveStart) {
                     if (lastEndIndex != lastStartIndex) {
                         compileNewLines(list, text.subSequence(lastEndIndex, lastStartIndex));
+                        lastEndIndex = lastStartIndex;
                     }
                     CharSequence parseText = text.subSequence(lastStartIndex, index + 1);
                     int res = adapter.parseRes(parseText);
                     if (res <= 0) {
                         Drawable d = adapter.parseDrawable(parseText);
                         if (d == null) {
-                            compileNewLines(list, parseText);
+//                            compileNewLines(list, parseText);
                         } else {
                             list.add(DefaultDrawableBlock.createSpecialDrawableBlock(parseText, d));
+                            lastEndIndex = index + 1;
                         }
                     } else {
                         list.add(DefaultDrawableBlock.createDrawableBlock(parseText, res));
+                        lastEndIndex = index + 1;
                     }
-                    lastEndIndex = index + 1;
                 } else {
                     //do nothing
                 }
