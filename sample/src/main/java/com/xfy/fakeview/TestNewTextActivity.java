@@ -89,10 +89,10 @@ public class TestNewTextActivity extends Activity {
         editText = findViewByResId(R.id.edit);
         switcher = findViewByResId(R.id.switcher);
         data = findViewByResId(R.id.data);
-        normal_text.setMaxHeight(150);
-        normal_text.setTextSize(TypedValue.COMPLEX_UNIT_PX, 50);
         layoutTextView.setTextSize(50);
         newTextView2.setInlucdePad(false);
+        layoutTextView.setVisibility(View.GONE);
+        normal_text.setVisibility(View.GONE);
 
         DrawableTextCompiler.getCompiler().setResourceAdapter(new DefaultResourceAdapter());
 
@@ -121,7 +121,8 @@ public class TestNewTextActivity extends Activity {
                 end = now();
                 Log.d(TAG, "set newtext2: " + (end - now));
                 now = now();
-                normal_text.setText(LayoutHelper.newSpan(s, (int) normal_text.getTextSize()));
+//                normal_text.setText(LayoutHelper.newSpan(s, (int) normal_text.getTextSize()));
+                normal_text.setText(LayoutHelper.getRichText(s));
                 end = now();
                 Log.d(TAG, "set text: " + (end - now));
                 now = now();
