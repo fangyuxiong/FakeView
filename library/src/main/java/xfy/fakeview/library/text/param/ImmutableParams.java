@@ -4,6 +4,10 @@ import android.text.TextPaint;
 import android.text.TextUtils;
 import android.view.Gravity;
 
+import java.util.ArrayList;
+
+import xfy.fakeview.library.text.block.IDrawableBlock;
+
 /**
  * 不可变参数
  */
@@ -33,4 +37,17 @@ public class ImmutableParams {
     public int ellipsizeLength;
     //所有行高
     public int[] lineInfos;
+    //整个block的flag
+    public long blockFlag;
+    //一个blocklist里所有的可点击的block
+    public ArrayList<ClickSpanBlockInfo> clickSpanBlockInfos = new ArrayList<>();
+
+    public void addClickSpanBlockInfo(IDrawableBlock block, int left, int top, long flag) {
+        if (!clickSpanBlockInfos.contains(block))
+            clickSpanBlockInfos.add(new ClickSpanBlockInfo(block, left, top, flag));
+    }
+
+    public void clearClickBlockInfo() {
+        clickSpanBlockInfos.clear();
+    }
 }

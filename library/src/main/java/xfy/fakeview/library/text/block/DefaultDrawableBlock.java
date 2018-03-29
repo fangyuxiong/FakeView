@@ -8,23 +8,27 @@ import android.text.TextPaint;
 import android.view.MotionEvent;
 import android.view.View;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
 import xfy.fakeview.library.text.drawer.TextDrawableDrawer;
 import xfy.fakeview.library.text.drawer.TextDrawer;
+import xfy.fakeview.library.text.param.ClickSpanBlockInfo;
 import xfy.fakeview.library.text.param.ImmutableParams;
 import xfy.fakeview.library.text.param.SpecialStyleParams;
 import xfy.fakeview.library.text.param.VariableParams;
 import xfy.fakeview.library.text.utils.BaseSpan;
+import xfy.fakeview.library.text.utils.CallbackObserver;
 import xfy.fakeview.library.text.utils.FClickableSpan;
+import xfy.fakeview.library.text.utils.IllegalDrawableException;
 import xfy.fakeview.library.text.utils.LineUtils;
 import xfy.fakeview.library.text.utils.MeasureTextUtils;
 
 /**
  * Created by XiongFangyu on 2018/3/2.
  */
-public class DefaultDrawableBlock implements IDrawableBlock<DefaultDrawableBlockList> {
+public class DefaultDrawableBlock implements IDrawableBlock<DefaultDrawableBlockList>, Drawable.Callback {
     private int type;
     private CharSequence mText;
     private SpecialStyleParams textStyleParams;
@@ -33,12 +37,15 @@ public class DefaultDrawableBlock implements IDrawableBlock<DefaultDrawableBlock
     private DefaultDrawableBlockList children;
     private BaseSpan span;
 
+    private final ArrayList<WeakReference<Drawable.Callback>> callbacks;
+    private boolean hasCreateNewDrawableForSpecialDrawable;
+    private boolean hasSetCallback;
     private long flag;
     private int baseLine;
-    private int left;
-    private int top;
 
-    private DefaultDrawableBlock() {}
+    private DefaultDrawableBlock() {
+        callbacks = new ArrayList<>();
+    }
 
     private static final int DEFAULT_SIZE = 20;
     private static final List<DefaultDrawableBlock> cache;
@@ -60,6 +67,9 @@ public class DefaultDrawableBlock implements IDrawableBlock<DefaultDrawableBlock
     }
 
     public void recycle() {
+        callbacks.clear();
+        hasCreateNewDrawableForSpecialDrawable = false;
+        hasSetCallback = false;
         span = null;
         flag = 0;
         type = 0;
@@ -69,6 +79,11 @@ public class DefaultDrawableBlock implements IDrawableBlock<DefaultDrawableBlock
             textStyleParams.recycle();
         textStyleParams = null;
         drawableRes = 0;
+        if (specialDrawable != null) {
+            if (specialDrawable instanceof CallbackObserver) {
+                ((CallbackObserver) specialDrawable).onCallbackSet(null);
+            }
+        }
         specialDrawable = null;
         if (children != null)
             children.notUse();
@@ -112,11 +127,17 @@ public class DefaultDrawableBlock implements IDrawableBlock<DefaultDrawableBlock
     }
 
     @Override
-    public long measure(TextPaint textPaint, int lineInfo, int drawableSize, int currentLeft, int currentTop, int left, int right, boolean includePad) {
+    public long measure(BlockMeasureParams measureParams, @NonNull ImmutableParams immutableParams) {
+        final TextPaint textPaint = immutableParams.paint;
+        final int lineInfo = measureParams.lineInfo;
+        final int drawableSize = measureParams.drawableSize;
+        final int left = measureParams.left;
+        final int currentLeft = measureParams.currentLeft;
+        final int right = measureParams.right;
+        final boolean includePad = measureParams.includePad;
+        final int top = measureParams.currentTop;
         int fontHeight = LineUtils.getLineHeight(lineInfo);
         this.baseLine = LineUtils.getBaseLine(lineInfo);
-        this.left = currentLeft;
-        this.top = currentTop;
         switch (type) {
             case TEXT:
                 float oldTextSize = textPaint.getTextSize();
@@ -149,11 +170,27 @@ public class DefaultDrawableBlock implements IDrawableBlock<DefaultDrawableBlock
                 }
                 flag = TextDrawer.measureFixWidth(specialDrawable.getBounds().width(), currentLeft, left, right);
                 break;
+            case NEED_SET_CALLBACK_DRAWABLE:
+                if (!hasCreateNewDrawableForSpecialDrawable) {
+                    specialDrawable = TextDrawableDrawer.getDrawableDrawer().getSpecialDrawable(specialDrawable, drawableSize, true);
+                    hasCreateNewDrawableForSpecialDrawable = true;
+                    if (!hasSetCallback) {
+                        ((CallbackObserver) specialDrawable).onCallbackSet(this);
+                        hasSetCallback = true;
+                    }
+                }
+                flag = TextDrawer.measureFixWidth(specialDrawable.getBounds().width(), currentLeft, left, right);
+                break;
             case SPAN:
                 DefaultDrawableBlockList children = getChildren();
-                if (children == null)
+                if (children == null) {
                     flag = 0;
-                flag = children.measure(textPaint, lineInfo, drawableSize, currentLeft, currentTop, left, right, includePad);
+                } else {
+                    flag = children.measure(measureParams, immutableParams);
+                }
+                if (span instanceof FClickableSpan) {
+                    immutableParams.addClickSpanBlockInfo(this, currentLeft, top, flag);
+                }
                 break;
         }
         return flag;
@@ -163,7 +200,6 @@ public class DefaultDrawableBlock implements IDrawableBlock<DefaultDrawableBlock
     public boolean draw(Canvas canvas, @NonNull VariableParams variableParams, @NonNull ImmutableParams immutableParams) {
         if (variableParams.isDrawEndEllipsize)
             return true;
-        variableParams.needDrawLines = MeasureTextUtils.getLines(flag);
         switch (type) {
             case TEXT:
                 TextDrawer.drawText(canvas, mText, variableParams, immutableParams, textStyleParams);
@@ -189,6 +225,13 @@ public class DefaultDrawableBlock implements IDrawableBlock<DefaultDrawableBlock
                 }
                 TextDrawableDrawer.getDrawableDrawer().drawSpecialDrawable(canvas, specialDrawable, variableParams, immutableParams);
                 break;
+            case NEED_SET_CALLBACK_DRAWABLE:
+                if (specialDrawable == null) {
+                    TextDrawer.drawText(canvas, mText, variableParams, immutableParams, textStyleParams);
+                    break;
+                }
+                TextDrawableDrawer.getDrawableDrawer().drawSpecialDrawable(canvas, specialDrawable, variableParams, immutableParams);
+                break;
             case SPAN:
                 DefaultDrawableBlockList children = getChildren();
                 if (children == null)
@@ -206,20 +249,19 @@ public class DefaultDrawableBlock implements IDrawableBlock<DefaultDrawableBlock
         return true;
     }
 
-    private boolean handleEvent = false;
-
     @Override
-    public boolean onTouchEvent(@NonNull View v, MotionEvent event, @NonNull ImmutableParams immutableParams) {
+    public boolean onTouchEvent(@NonNull View v, MotionEvent event, @NonNull ImmutableParams immutableParams, @NonNull ClickSpanBlockInfo blockInfo) {
         if (type != SPAN)
             return false;
         if (!(span instanceof FClickableSpan)) {
             return false;
         }
         int action = event.getAction();
+        boolean handleEvent = false;
         if (action == MotionEvent.ACTION_UP ||
                 action == MotionEvent.ACTION_DOWN) {
             handleEvent = false;
-            if (isPointInThisBlock(event.getX(), event.getY(), immutableParams)) {
+            if (isPointInThisBlock(event.getX(), event.getY(), immutableParams, blockInfo)) {
                 if (action == MotionEvent.ACTION_UP) {
                     ((FClickableSpan) span).onClick(v);
                     return true;
@@ -229,10 +271,47 @@ public class DefaultDrawableBlock implements IDrawableBlock<DefaultDrawableBlock
             }
         }
         return handleEvent;
-
     }
 
-    private boolean isPointInThisBlock(float x, float y, @NonNull ImmutableParams immutableParams) {
+    @Override
+    public void addCallback(Drawable.Callback callback) {
+        if (type != NEED_SET_CALLBACK_DRAWABLE)
+            return;
+        boolean needAdd = true;
+        for (int i = callbacks.size() - 1; i >= 0 ;i --) {
+            WeakReference<Drawable.Callback> ref = callbacks.get(i);
+            Drawable.Callback c = ref != null ? ref.get() : null;
+            if (c == null) {
+                callbacks.remove(i);
+                continue;
+            }
+            if (c == callback) {
+                needAdd = false;
+                continue;
+            }
+        }
+        if (needAdd)
+            callbacks.add(new WeakReference<Drawable.Callback>(callback));
+        if (!hasSetCallback && hasCreateNewDrawableForSpecialDrawable) {
+            ((CallbackObserver)specialDrawable).onCallbackSet(this);
+            hasSetCallback = true;
+        }
+    }
+
+    @Override
+    public void removeCallback(Drawable.Callback callback) {
+        for (int i = callbacks.size() - 1; i >= 0 ;i --) {
+            WeakReference<Drawable.Callback> ref = callbacks.get(i);
+            Drawable.Callback c = ref != null ? ref.get() : null;
+            if (c == null || c == callback) {
+                callbacks.remove(i);
+                continue;
+            }
+        }
+    }
+
+    private boolean isPointInThisBlock(float x, float y, @NonNull ImmutableParams immutableParams, @NonNull ClickSpanBlockInfo blockInfo) {
+        long flag = blockInfo.blockFlag;
         final int h = MeasureTextUtils.getMaxHeight(flag);
         if (h <= 0)
             return false;
@@ -246,6 +325,8 @@ public class DefaultDrawableBlock implements IDrawableBlock<DefaultDrawableBlock
         y -= immutableParams.top;
         if (x < 0 || y < 0)
             return false;
+        final int left = blockInfo.blockLeft;
+        final int top = blockInfo.blockTop;
         final int b = h + top;
         if (lines == 1) {
             return x >= left && x <= cl && y >= top && y <= b;
@@ -301,6 +382,17 @@ public class DefaultDrawableBlock implements IDrawableBlock<DefaultDrawableBlock
         return block;
     }
 
+    public static DefaultDrawableBlock createNeedSetCallbackDrawableBlock(CharSequence text, Drawable d) {
+        if (!(d instanceof CallbackObserver)) {
+            throw new IllegalDrawableException("drawble " + d.getClass().getName() + " is not a CallbackObserver");
+        }
+        DefaultDrawableBlock block = DefaultDrawableBlock.obtain();
+        block.mText = text;
+        block.type = NEED_SET_CALLBACK_DRAWABLE;
+        block.specialDrawable = d;
+        return block;
+    }
+
     public static DefaultDrawableBlock createSpanBlock(CharSequence text, BaseSpan span, DefaultDrawableBlockList children) {
         DefaultDrawableBlock block = DefaultDrawableBlock.obtain();
         block.mText = text;
@@ -322,5 +414,41 @@ public class DefaultDrawableBlock implements IDrawableBlock<DefaultDrawableBlock
         block.mText = "\n";
         block.type = NEXTLINE;
         return block;
+    }
+
+    @Override
+    public void invalidateDrawable(@NonNull Drawable who) {
+        for (int i = 0, l = callbacks.size(); i < l; i ++) {
+            WeakReference<Drawable.Callback> ref = callbacks.get(i);
+            Drawable.Callback callback = ref != null ? ref.get() : null;
+            if (callback != null)
+                callback.invalidateDrawable(who);
+        }
+    }
+
+    @Override
+    public void scheduleDrawable(@NonNull Drawable who, @NonNull Runnable what, long when) {
+        int i = 0;
+        int len = callbacks.size();
+        if (len <= i)
+            return;
+        WeakReference<Drawable.Callback> ref = callbacks.get(i++);
+        Drawable.Callback callback = ref != null ? ref.get() : null;
+        while (callback == null && len > i) {
+            ref = callbacks.get(i);
+            callback = ref != null ? ref.get() : null;
+        }
+        if (callback != null)
+            callback.scheduleDrawable(who, what, when);
+    }
+
+    @Override
+    public void unscheduleDrawable(@NonNull Drawable who, @NonNull Runnable what) {
+        for (int i = 0, l = callbacks.size(); i < l; i ++) {
+            WeakReference<Drawable.Callback> ref = callbacks.get(i);
+            Drawable.Callback callback = ref != null ? ref.get() : null;
+            if (callback != null)
+                callback.unscheduleDrawable(who, what);
+        }
     }
 }

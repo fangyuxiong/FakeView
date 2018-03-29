@@ -11,6 +11,7 @@ import android.text.TextPaint;
 import android.text.TextUtils;
 import android.util.Log;
 
+import xfy.fakeview.library.text.block.BlockMeasureParams;
 import xfy.fakeview.library.text.block.IDrawableBlockList;
 import xfy.fakeview.library.text.param.ImmutableParams;
 import xfy.fakeview.library.text.param.SpecialStyleParams;
@@ -334,9 +335,17 @@ public class TextDrawer {
         return MeasureTextUtils.calContentMaxWidth(MeasureTextUtils.setCurrentLeft(flag, MeasureTextUtils.getCurrentLeft(flag) + width), left);
     }
 
-    public static long measureText(TextPaint textPaint, IDrawableBlockList list, int drawableSize,
+    public static long measureText(@NonNull ImmutableParams immutableParams, IDrawableBlockList list, int drawableSize,
                                    int currentLeft, int left, int right, boolean includePad) {
-        return list.measure(textPaint, getLineInfo(textPaint, drawableSize, includePad), drawableSize, currentLeft, 0, left, right, includePad);
+        BlockMeasureParams params = BlockMeasureParams.obtain()
+                .setLineInfo(getLineInfo(immutableParams.paint, drawableSize, includePad))
+                .setDrawableSize(drawableSize)
+                .setCurrentLeft(currentLeft)
+                .setCurrentTop(0)
+                .setLeft(left)
+                .setRight(right)
+                .setIncludePad(includePad);
+        return list.measure(params, immutableParams);
     }
 
     /**

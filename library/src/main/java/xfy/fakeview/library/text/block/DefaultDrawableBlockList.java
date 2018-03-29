@@ -1,8 +1,8 @@
 package xfy.fakeview.library.text.block;
 
 import android.graphics.Canvas;
+import android.graphics.drawable.Drawable;
 import android.support.annotation.NonNull;
-import android.text.TextPaint;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -10,6 +10,7 @@ import android.view.View;
 import java.util.ArrayList;
 import java.util.List;
 
+import xfy.fakeview.library.text.param.ClickSpanBlockInfo;
 import xfy.fakeview.library.text.param.ImmutableParams;
 import xfy.fakeview.library.text.param.VariableParams;
 import xfy.fakeview.library.text.utils.LineUtils;
@@ -24,10 +25,11 @@ public class DefaultDrawableBlockList extends ArrayList<DefaultDrawableBlock> im
 
     private int mStart;
     private int mEnd;
-    private int mNewLineCount;
-    private int mDrawableCount;
-    private int mSpecialDrawableCount;
+//    private int mNewLineCount;
+//    private int mDrawableCount;
+//    private int mSpecialDrawableCount;
     private boolean hasSpan = false;
+    private boolean hasNeedSetCallbackBlock;
 
     private long lastFlag = 0;
     private int lastDrawableSize = 0;
@@ -68,9 +70,10 @@ public class DefaultDrawableBlockList extends ArrayList<DefaultDrawableBlock> im
         lines = 0;
         lineFlags = null;
         hasSpan = false;
-        mNewLineCount = 0;
-        mDrawableCount = 0;
-        mSpecialDrawableCount = 0;
+        hasNeedSetCallbackBlock = false;
+//        mNewLineCount = 0;
+//        mDrawableCount = 0;
+//        mSpecialDrawableCount = 0;
         lastFlag = 0;
         lastDrawableSize = 0;
         lastCLeft = 0;
@@ -115,12 +118,12 @@ public class DefaultDrawableBlockList extends ArrayList<DefaultDrawableBlock> im
 
     @Override
     public boolean onTouchEvent(@NonNull View v, MotionEvent event, @NonNull ImmutableParams immutableParams) {
-        if (!hasSpan())
+        if (!hasSpan() || immutableParams.clickSpanBlockInfos == null || immutableParams.clickSpanBlockInfos.size() == 0)
             return false;
-        for (int i = 0, l = size(); i < l;i ++) {
-            IDrawableBlock block = get(i);
-            if (block != null && block.getType() == IDrawableBlock.SPAN) {
-                if (block.onTouchEvent(v, event, immutableParams)) {
+        for (int i = 0, l = immutableParams.clickSpanBlockInfos.size(); i < l;i ++) {
+            ClickSpanBlockInfo blockInfo = immutableParams.clickSpanBlockInfos.get(i);
+            if (blockInfo != null && blockInfo.block != null) {
+                if (blockInfo.block.onTouchEvent(v, event, immutableParams, blockInfo)) {
                     return true;
                 }
             }
@@ -129,17 +132,47 @@ public class DefaultDrawableBlockList extends ArrayList<DefaultDrawableBlock> im
     }
 
     @Override
-    public void draw(Canvas canvas, @NonNull VariableParams variableParams, @NonNull ImmutableParams immutableParams) {
+    public boolean draw(Canvas canvas, @NonNull VariableParams variableParams, @NonNull ImmutableParams immutableParams) {
+        boolean result = true;
         canvas.save();
         traslateCanvas(canvas, immutableParams);
         for (int i = 0, l = size(); i < l; i ++) {
-            get(i).draw(canvas, variableParams, immutableParams);
+            result |= get(i).draw(canvas, variableParams, immutableParams);
         }
         canvas.restore();
+        return result;
+    }
+
+    @Override
+    public void addCallback(Drawable.Callback callback) {
+        if (!hasNeedSetCallbackBlock)
+            return;
+        for (int i = 0, l = size(); i < l; i ++) {
+            IDrawableBlock block = get(i);
+            if (block.getType() == IDrawableBlock.NEED_SET_CALLBACK_DRAWABLE) {
+                block.addCallback(callback);
+            } else if (block.getType() == IDrawableBlock.SPAN) {
+                block.getChildren().addCallback(callback);
+            }
+        }
+    }
+
+    @Override
+    public void removeCallback(Drawable.Callback callback) {
+        if (!hasNeedSetCallbackBlock)
+            return;
+        for (int i = 0, l = size(); i < l; i ++) {
+            IDrawableBlock block = get(i);
+            if (block.getType() == IDrawableBlock.NEED_SET_CALLBACK_DRAWABLE) {
+                block.removeCallback(callback);
+            } else if (block.getType() == IDrawableBlock.SPAN) {
+                block.getChildren().removeCallback(callback);
+            }
+        }
     }
 
     private void traslateCanvas(Canvas canvas, ImmutableParams params) {
-        final int textWidth = MeasureTextUtils.getMaxWidth(lastFlag);
+        final int textWidth = MeasureTextUtils.getMaxWidth(params.blockFlag);
         final int textHeight = getAllLineHeight(params);
         if (textHeight == 0)
             return;
@@ -192,20 +225,20 @@ public class DefaultDrawableBlockList extends ArrayList<DefaultDrawableBlock> im
         return mEnd;
     }
 
-    @Override
-    public int getNewLineCount() {
-        return mNewLineCount;
-    }
+//    @Override
+//    public int getNewLineCount() {
+//        return mNewLineCount;
+//    }
 
-    @Override
-    public int getDrawableCount() {
-        return mDrawableCount;
-    }
-
-    @Override
-    public int getSpecialDrawableCount() {
-        return mSpecialDrawableCount;
-    }
+//    @Override
+//    public int getDrawableCount() {
+//        return mDrawableCount;
+//    }
+//
+//    @Override
+//    public int getSpecialDrawableCount() {
+//        return mSpecialDrawableCount;
+//    }
 
     @Override
     public boolean hasSpan() {
@@ -218,12 +251,18 @@ public class DefaultDrawableBlockList extends ArrayList<DefaultDrawableBlock> im
     }
 
     @Override
-    public int getFlagSize() {
+    public int getLineHeightSize() {
         return lines;
     }
 
     @Override
-    public long measure(TextPaint textPaint, int lineInfo, int drawableSize, int currentLeft, int currentTop, int left, int right, boolean includePad) {
+    public long measure(BlockMeasureParams measureParams, @NonNull ImmutableParams immutableParams) {
+        final int lineInfo = measureParams.lineInfo;
+        final int drawableSize = measureParams.drawableSize;
+        int currentLeft = measureParams.currentLeft;
+        int currentTop = measureParams.currentTop;
+        final int left = measureParams.left;
+        final int right = measureParams.right;
         if (drawableSize == lastDrawableSize && lastCLeft == currentLeft && lastLeft == left && lastRight == right && lastFlag != 0) {
             return lastFlag;
         }
@@ -233,7 +272,9 @@ public class DefaultDrawableBlockList extends ArrayList<DefaultDrawableBlock> im
             IDrawableBlock block = get(i);
             if (block == null)
                 continue;
-            long bf = block.measure(textPaint, lineInfo, drawableSize, currentLeft, currentTop, left, right, includePad);
+            measureParams.currentLeft = currentLeft;
+            measureParams.currentTop = currentTop;
+            long bf = block.measure(measureParams, immutableParams);
             int state = bf == 0 ? MeasureTextUtils.STATE_ERROR : MeasureTextUtils.getState(bf);
             if (state == MeasureTextUtils.STATE_SUCCESS) {
                 int cl = MeasureTextUtils.getLines(flag);
@@ -308,20 +349,26 @@ public class DefaultDrawableBlockList extends ArrayList<DefaultDrawableBlock> im
         if (!super.add(block))
             return false;
         switch (block.getType()) {
-            case IDrawableBlock.DRAWABLE:
-                mDrawableCount ++;
+            case IDrawableBlock.NEED_SET_CALLBACK_DRAWABLE:
+                hasNeedSetCallbackBlock = true;
                 break;
-            case IDrawableBlock.NEXTLINE:
-                mNewLineCount ++;
-                break;
-            case IDrawableBlock.SPECIAL_DRAWABLE:
-                mSpecialDrawableCount ++;
-                break;
+//            case IDrawableBlock.DRAWABLE:
+//                mDrawableCount ++;
+//                break;
+//            case IDrawableBlock.NEXTLINE:
+//                mNewLineCount ++;
+//                break;
+//            case IDrawableBlock.SPECIAL_DRAWABLE:
+//                mSpecialDrawableCount ++;
+//                break;
             case IDrawableBlock.SPAN:
                 hasSpan = true;
-                mDrawableCount += block.getChildren().getNewLineCount();
-                mNewLineCount += block.getChildren().getNewLineCount();
-                mSpecialDrawableCount += block.getChildren().getSpecialDrawableCount();
+                if (!hasNeedSetCallbackBlock) {
+                    hasNeedSetCallbackBlock = block.getChildren().hasNeedSetCallbackBlock;
+                }
+//                mDrawableCount += block.getChildren().getNewLineCount();
+//                mNewLineCount += block.getChildren().getNewLineCount();
+//                mSpecialDrawableCount += block.getChildren().getSpecialDrawableCount();
                 break;
         }
         return true;
