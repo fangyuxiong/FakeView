@@ -238,6 +238,8 @@ public class FTextDrawable extends Drawable implements Drawable.Callback{
         if (this.maxWidth != maxWidth) {
             this.maxWidth = maxWidth;
             if (mText != null) {
+                needMeasureTextLines = true;
+                needMeasureText = true;
                 if (autoMeasure)
                     measure();
                 requestLayout();
@@ -251,6 +253,8 @@ public class FTextDrawable extends Drawable implements Drawable.Callback{
         if (this.maxHeight != maxHeight) {
             this.maxHeight = maxHeight;
             if (mText != null) {
+                needMeasureTextLines = true;
+                needMeasureText = true;
                 if (autoMeasure)
                     measure();
                 requestLayout();
