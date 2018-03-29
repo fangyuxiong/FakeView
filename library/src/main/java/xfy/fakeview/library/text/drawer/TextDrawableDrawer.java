@@ -10,6 +10,7 @@ import android.support.annotation.NonNull;
 
 import xfy.fakeview.library.text.param.ImmutableParams;
 import xfy.fakeview.library.text.param.VariableParams;
+import xfy.fakeview.library.text.utils.IllegalDrawableException;
 
 /**
  * Created by XiongFangyu on 2018/3/2.
@@ -48,7 +49,7 @@ public class TextDrawableDrawer {
     public Drawable drawResource(@NonNull Canvas canvas, @DrawableRes int res,
                                         @NonNull VariableParams variableParams, @NonNull ImmutableParams immutableParams) {
         Drawable drawable = getSpecialDrawable(res, immutableParams.drawableHeight);
-        return drawDrawable(canvas, drawable, variableParams, immutableParams);
+        return drawDrawable(canvas, drawable, false, variableParams, immutableParams);
     }
 
     /**
@@ -59,25 +60,31 @@ public class TextDrawableDrawer {
      * @param immutableParams
      * @return 若此drawable可复制，则返回复制的drawable；反之返回获取到的drawable
      */
-    public Drawable drawDrawable(Canvas canvas, Drawable drawable,
+    public Drawable drawDrawable(Canvas canvas, Drawable drawable, boolean forceNewDrawable,
                                     @NonNull VariableParams variableParams, @NonNull ImmutableParams immutableParams) {
-        drawable = getSpecialDrawable(drawable, immutableParams.drawableHeight);
+        drawable = getSpecialDrawable(drawable, immutableParams.drawableHeight, forceNewDrawable);
         drawSpecialDrawable(canvas, drawable, variableParams, immutableParams);
         return drawable;
     }
 
     public Drawable getSpecialDrawable(@DrawableRes int res, int drawableHeight) {
-        return getSpecialDrawable(getResources().getDrawable(res), drawableHeight);
+        return getSpecialDrawable(getResources().getDrawable(res), drawableHeight, false);
     }
 
-    public Drawable getSpecialDrawable(Drawable drawable, int drawableHeight) {
-//        Drawable.ConstantState state = drawable.getConstantState();
-//        if (state != null) {
-//            Drawable newDrawable = state.newDrawable();
-//            if (newDrawable != null) {
-//                drawable = newDrawable;
-//            }
-//        }
+    public Drawable getSpecialDrawable(Drawable drawable, int drawableHeight, boolean forceNewDrawable) {
+        if (forceNewDrawable) {
+            Drawable.ConstantState state = drawable.getConstantState();
+            if (state != null) {
+                Drawable newDrawable = state.newDrawable();
+                if (newDrawable != null && newDrawable != drawable) {
+                    drawable = newDrawable;
+                } else {
+                    throw new IllegalDrawableException("drawable " + drawable.getClass().getName() + " state return a null or a same drawable.");
+                }
+            } else {
+                throw new IllegalDrawableException("drawable " + drawable.getClass().getName() + " return null constant state");
+            }
+        }
 
         Rect bounds = drawable.getBounds();
         if (bounds.height() != drawableHeight) {
@@ -128,4 +135,5 @@ public class TextDrawableDrawer {
     protected Resources getResources() {
         return context.getResources();
     }
+
 }

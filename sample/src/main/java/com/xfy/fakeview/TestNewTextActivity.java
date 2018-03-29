@@ -4,6 +4,8 @@ import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.text.Spannable;
+import android.text.SpannableStringBuilder;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
@@ -11,8 +13,11 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.xfy.fakeview.special.SpecialDrawable;
+
 import xfy.fakeview.library.text.NewTextView;
 import xfy.fakeview.library.text.compiler.DrawableTextCompiler;
+import xfy.fakeview.library.text.utils.FClickableSpan;
 
 /**
  * Created by 
@@ -93,21 +98,33 @@ public class TestNewTextActivity extends Activity {
         newTextView2.setInlucdePad(false);
         layoutTextView.setVisibility(View.GONE);
         normal_text.setVisibility(View.GONE);
+        View v = findViewById(R.id.test);
+        SpecialDrawable.getSingleInstance().onCallbackSet(v);
+        v.setBackgroundDrawable(SpecialDrawable.getSingleInstance());
 
         DrawableTextCompiler.getCompiler().setResourceAdapter(new DefaultResourceAdapter());
 
-//        SpannableStringBuilder sb = new SpannableStringBuilder("haslkdjflsakggggasd");
-//        sb.setSpan(new FClickableSpan() {
-//            @Override
-//            public void onClick(View v) {
-//                showToast("onclickspan");
-//            }
-//        }.underlineText().italicText(), 3, 10, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-//        newTextView.setText(sb);
+        SpannableStringBuilder sb = new SpannableStringBuilder("haslkdjflsakggggasd");
+        sb.setSpan(new FClickableSpan() {
+            @Override
+            public void onClick(View v) {
+                showToast("onclickspan" + v.hashCode());
+            }
+        }.underlineText().italicText(), 3, 10, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        newTextView.setText(sb);
+        newTextView2.setText(sb);
 //        newTextView.setText("h1(font size='30px' color='white' weight='600' background='blue')今天天气真好，晚上来家坐坐呀(/font)h2(font size='100px' color='red' weight='800')@王先asfsadfsdfsadfds生(/font)h3");
     }
 
     private void initEvent() {
+        findViewById(R.id.container).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                newTextView.invalidate();
+                newTextView2.invalidate();
+                showToast("click container");
+            }
+        });
         findViewById(R.id.click).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -154,13 +171,13 @@ public class TestNewTextActivity extends Activity {
                 switcher.setText(type.name());
             }
         });
-        newTextView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                bold = !bold;
-                newTextView.setBoldText(bold);
-            }
-        });
+//        newTextView.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                bold = !bold;
+//                newTextView.setBoldText(bold);
+//            }
+//        });
     }
 
     @Override

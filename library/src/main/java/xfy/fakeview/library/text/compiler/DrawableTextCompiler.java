@@ -5,6 +5,7 @@ import android.support.annotation.NonNull;
 
 import xfy.fakeview.library.text.block.DefaultDrawableBlock;
 import xfy.fakeview.library.text.block.DefaultDrawableBlockList;
+import xfy.fakeview.library.text.utils.CallbackObserver;
 
 /**
  * Created by XiongFangyu on 2018/3/13.
@@ -70,7 +71,11 @@ public class DrawableTextCompiler extends DefaultTextCompiler {
                         if (d == null) {
 //                            compileNewLines(list, parseText);
                         } else {
-                            list.add(DefaultDrawableBlock.createSpecialDrawableBlock(parseText, d));
+                            if (d instanceof CallbackObserver) {
+                                list.add(DefaultDrawableBlock.createNeedSetCallbackDrawableBlock(parseText, d));
+                            } else {
+                                list.add(DefaultDrawableBlock.createSpecialDrawableBlock(parseText, d));
+                            }
                             lastEndIndex = index + 1;
                         }
                     } else {

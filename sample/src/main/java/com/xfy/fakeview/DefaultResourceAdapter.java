@@ -3,6 +3,8 @@ package com.xfy.fakeview;
 import android.graphics.drawable.Drawable;
 import android.support.annotation.NonNull;
 
+import com.xfy.fakeview.special.SpecialDrawable;
+
 import xfy.fakeview.library.text.compiler.DrawableTextCompiler;
 
 /**
@@ -16,6 +18,8 @@ public class DefaultResourceAdapter implements DrawableTextCompiler.ResourceAdap
 
     @Override
     public Drawable parseDrawable(@NonNull CharSequence text) {
+        if (text.equals("(spcial)"))
+        return SpecialDrawable.getSingleInstance();
         return null;
     }
 }

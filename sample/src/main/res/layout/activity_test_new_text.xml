@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -49,7 +50,7 @@
         android:lineSpacingExtra="0px"
         android:text="h1(font size='30px' color='white' weight='600' background='blue')今天天气真好，晚上来家坐坐呀(/font)h2(font size='100px' color='red' weight='800')@王先asfsadfsdfsadfds生(/font)h3"
         app:fntv_drawable_scale="1"
-        app:fntv_text_compiler="spcial_text"
+        app:fntv_text_compiler="click_span"
         android:background="#af00"/>
 
     <xfy.fakeview.library.text.NewTextView
@@ -61,7 +62,7 @@
         android:textColor="#f00"
         android:lineSpacingExtra="0px"
         android:text="test"
-        app:fntv_text_compiler="com.xfy.fakeview.special.TestCompiler"
+        app:fntv_text_compiler="click_span"
         android:background="#a0f0"/>
 
     <com.xfy.fakeview.TraceTextView
@@ -80,4 +81,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="#a00f" />
+
+    <View
+        android:id="@+id/test"
+        android:layout_width="50dp"
+        android:layout_height="50dp"/>
 </LinearLayout>

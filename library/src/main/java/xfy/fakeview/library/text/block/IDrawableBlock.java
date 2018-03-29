@@ -1,25 +1,23 @@
 package xfy.fakeview.library.text.block;
 
-import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
 import android.support.annotation.NonNull;
-import android.text.TextPaint;
 import android.view.MotionEvent;
 import android.view.View;
 
+import xfy.fakeview.library.text.param.ClickSpanBlockInfo;
 import xfy.fakeview.library.text.param.ImmutableParams;
-import xfy.fakeview.library.text.param.VariableParams;
 
 /**
  * Created by XiongFangyu on 2018/3/2.
  */
-public interface IDrawableBlock<T extends IDrawableBlockList> {
+public interface IDrawableBlock<T extends IDrawableBlockList> extends IBlock {
     int TEXT = 0;
     int DRAWABLE = 1;
     int SPECIAL_DRAWABLE = 2;
     int SPAN = 3;
     int NEXTLINE = 4;
-    long getFlag();
+    int NEED_SET_CALLBACK_DRAWABLE = 5;
 
     int getType();
 
@@ -33,9 +31,5 @@ public interface IDrawableBlock<T extends IDrawableBlockList> {
 
     T getChildren();
 
-    long measure(TextPaint textPaint, int baseLine, int drawableSize, int currentLeft, int currentTop, int left, int right, boolean includePad);
-
-    boolean draw(Canvas canvas, @NonNull VariableParams variableParams, @NonNull ImmutableParams immutableParams);
-
-    boolean onTouchEvent(@NonNull View v, MotionEvent event, @NonNull ImmutableParams immutableParams);
+    boolean onTouchEvent(@NonNull View v, MotionEvent event, @NonNull ImmutableParams immutableParams, @NonNull ClickSpanBlockInfo blockInfo);
 }

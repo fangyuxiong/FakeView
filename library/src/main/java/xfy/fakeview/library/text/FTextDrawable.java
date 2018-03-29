@@ -31,7 +31,7 @@ import xfy.fakeview.library.text.utils.MeasureTextUtils;
 /**
  * Created by XiongFangyu on 2018/3/1.
  */
-public class FTextDrawable extends Drawable {
+public class FTextDrawable extends Drawable implements Drawable.Callback{
     private static final String TAG = "Fake--TextDrawable";
 
     private int lineSpace = 0;
@@ -69,12 +69,14 @@ public class FTextDrawable extends Drawable {
         mTextPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
         variableParams = new VariableParams();
         immutableParams = new ImmutableParams();
+        immutableParams.paint = mTextPaint;
     }
 
     public FTextDrawable(Context context, @Nullable AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         mTextPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
         variableParams = new VariableParams();
         immutableParams = new ImmutableParams();
+        immutableParams.paint = mTextPaint;
         StyleHelper helper = new StyleHelper(context, attrs, defStyleAttr, defStyleRes);
         if (helper.textCompiler != null)
             setTextCompiler(helper.textCompiler);
@@ -358,12 +360,15 @@ public class FTextDrawable extends Drawable {
     private void onTextSetted() {
         if (compiler != null) {
             if (blockList != null) {
+                blockList.removeCallback(this);
                 blockList.notUse();
+                immutableParams.clearClickBlockInfo();
             }
             if (mText == null) {
                 blockList = null;
             } else {
                 blockList = compiler.compile(mText);
+                blockList.addCallback(this);
             }
         } else {
             throw new NullPointerException("compiler is null, please set compiler before set text!");
@@ -378,10 +383,10 @@ public class FTextDrawable extends Drawable {
     private void initParamsBeforeDraw() {
         final Rect bounds = getBounds();
         final int left = bounds.left;
-        final int right = bounds.right;
         final int top = bounds.top;
+        final int right = bounds.right;
 
-        int flags[] = blockList != null ? blockList.getLinesHeight() : null;
+        int flags[] = immutableParams.lineInfos;
         if (flags != null) {
             variableParams.currentBaseline = LineUtils.getBaseLine(flags, 0) + bounds.top;
         }
@@ -390,21 +395,28 @@ public class FTextDrawable extends Drawable {
         variableParams.currentTop = top;
         variableParams.currentDrawLine = 0;
         variableParams.isDrawEndEllipsize = false;
-//        variableParams.middleEllipsizeWidthRecord = 0;
-//        variableParams.isExecutedMiddleEllipsize = false;
 
         immutableParams.top = top;
         immutableParams.bottom = bounds.bottom;
         immutableParams.left = left;
         immutableParams.right = right;
+    }
+
+    private void initImmutableParams() {
+        int flags[] = blockList != null ? blockList.getLinesHeight() : null;
+        if (flags != null) {
+            int clone[] = new int[flags.length];
+            System.arraycopy(flags, 0, clone, 0, flags.length);
+            flags = clone;
+        }
         immutableParams.drawableHeight = drawableSize;
         immutableParams.lineSpace = lineSpace;
         immutableParams.lines = lines;
         immutableParams.needDrawLine = needDrawLines;
         immutableParams.truncateAt = isNeedEllipsize ? ellipsize : null;
         immutableParams.ellipsizeLength = ellipsizeLength;
-        immutableParams.paint = mTextPaint;
         immutableParams.lineInfos = flags;
+        immutableParams.blockFlag = blockList != null ? blockList.getFlag() : 0;
     }
 
     public void measure() {
@@ -414,6 +426,7 @@ public class FTextDrawable extends Drawable {
         }
         calTextLinesAndContentWidth();
         calNeedDrawLines();
+        initImmutableParams();
     }
 
     private void calTextLinesAndContentWidth() {
@@ -431,7 +444,7 @@ public class FTextDrawable extends Drawable {
         if (maxWidth == 0) {
             maxWidth = bounds.width();
         }
-        long flag = TextDrawer.measureText(mTextPaint, blockList, drawableSize, left, left, left + maxWidth, includePad);
+        long flag = TextDrawer.measureText(immutableParams, blockList, drawableSize, left, left, left + maxWidth, includePad);
         if (MeasureTextUtils.getState(flag) == MeasureTextUtils.STATE_SUCCESS) {
             textWidth = MeasureTextUtils.getMaxWidth(flag);
             lines = MeasureTextUtils.getLines(flag);
@@ -467,6 +480,22 @@ public class FTextDrawable extends Drawable {
     }
     //</editor-folder>
 
+    //<editor-folder desc="Drawable.Callback">
+    @Override
+    public void invalidateDrawable(@NonNull Drawable who) {
+        invalidateSelf();
+    }
+
+    @Override
+    public void scheduleDrawable(@NonNull Drawable who, @NonNull Runnable what, long when) {
+        scheduleSelf(what, when);
+    }
+
+    @Override
+    public void unscheduleDrawable(@NonNull Drawable who, @NonNull Runnable what) {
+        unscheduleSelf(what);
+    }
+    //</editor-folder>
     public interface LayoutRequestListener {
         void needRequest(FTextDrawable drawable);
     }
