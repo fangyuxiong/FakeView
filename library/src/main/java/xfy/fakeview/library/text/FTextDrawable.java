@@ -358,6 +358,14 @@ public class FTextDrawable extends Drawable implements Drawable.Callback{
         int flags[] = blockList != null ? blockList.getLinesHeight() : null;
         return flags != null ? LineUtils.getAllLineHeight(flags, needDrawLines) + lineSpace * (needDrawLines - 1): 0;
     }
+
+    @Override
+    protected void onBoundsChange(Rect bounds) {
+        immutableParams.top = bounds.top;
+        immutableParams.bottom = bounds.bottom;
+        immutableParams.left = bounds.left;
+        immutableParams.right = bounds.right;
+    }
     //</editor-folder>
 
     //<editor-folder desc="private method">
@@ -388,7 +396,6 @@ public class FTextDrawable extends Drawable implements Drawable.Callback{
         final Rect bounds = getBounds();
         final int left = bounds.left;
         final int top = bounds.top;
-        final int right = bounds.right;
 
         int flags[] = immutableParams.lineInfos;
         if (flags != null) {
@@ -399,11 +406,6 @@ public class FTextDrawable extends Drawable implements Drawable.Callback{
         variableParams.currentTop = top;
         variableParams.currentDrawLine = 0;
         variableParams.isDrawEndEllipsize = false;
-
-        immutableParams.top = top;
-        immutableParams.bottom = bounds.bottom;
-        immutableParams.left = left;
-        immutableParams.right = right;
     }
 
     private void initImmutableParams() {
