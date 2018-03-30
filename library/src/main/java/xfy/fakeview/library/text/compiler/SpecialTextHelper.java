@@ -2,6 +2,7 @@ package xfy.fakeview.library.text.compiler;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.support.annotation.NonNull;
 import android.util.TypedValue;
 
 import xfy.fakeview.library.text.param.SpecialStyleParams;
@@ -23,8 +24,14 @@ public class SpecialTextHelper {
     }
 
     public static SpecialCompiler getSpecialCompiler(Context context) {
-        init(context);
         SpecialCompiler compiler = SpecialCompiler.getCompiler();
+        initSpecialCompiler(context, compiler);
+        return compiler;
+    }
+
+    public static void initSpecialCompiler(@NonNull Context context, @NonNull SpecialCompiler compiler) {
+        if (SpecialTextHelper.context == null)
+            init(context);
         if (colorAdapter == null || weightAdapter == null || sizeAdapter == null || backgroundColorAdapter == null) {
             colorAdapter = new ColorAdapter();
             weightAdapter = new WeightAdapter();
@@ -35,7 +42,6 @@ public class SpecialTextHelper {
             compiler.register("size", sizeAdapter);
             compiler.register("background", backgroundColorAdapter);
         }
-        return compiler;
     }
 
     private static class ColorAdapter implements SpecialStyleAdapter {
