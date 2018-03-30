@@ -336,7 +336,7 @@ public class TextDrawer {
     }
 
     public static long measureText(@NonNull ImmutableParams immutableParams, IDrawableBlockList list, int drawableSize,
-                                   int currentLeft, int left, int right, boolean includePad) {
+                                   int currentLeft, int left, int right, boolean includePad, boolean forceMeasure) {
         BlockMeasureParams params = BlockMeasureParams.obtain()
                 .setLineInfo(getLineInfo(immutableParams.paint, drawableSize, includePad))
                 .setDrawableSize(drawableSize)
@@ -344,7 +344,8 @@ public class TextDrawer {
                 .setCurrentTop(0)
                 .setLeft(left)
                 .setRight(right)
-                .setIncludePad(includePad);
+                .setIncludePad(includePad)
+                .setForceMeasure(forceMeasure);
         return list.measure(params, immutableParams);
     }
 

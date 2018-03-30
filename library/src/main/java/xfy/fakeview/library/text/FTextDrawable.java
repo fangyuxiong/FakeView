@@ -59,8 +59,8 @@ public class FTextDrawable extends Drawable implements Drawable.Callback{
     protected final TextPaint mTextPaint;
 
     protected boolean needMeasureText = false;
-
     protected boolean needMeasureTextLines = true;
+    protected boolean forceMeasureBlockList = false;
 
     protected IDrawableBlockList<IDrawableBlock> blockList;
     private ITextCompiler compiler;
@@ -310,6 +310,20 @@ public class FTextDrawable extends Drawable implements Drawable.Callback{
         }
         blockList = null;
     }
+
+    public void measure() {
+        if (maxWidth == 0 || maxHeight == 0) {
+            needMeasureText = true;
+            return;
+        }
+        calTextLinesAndContentWidth();
+        calNeedDrawLines();
+        initImmutableParams();
+    }
+
+    public void setForceMeasureBlockList(boolean force) {
+        forceMeasureBlockList = force;
+    }
     //</editor-folder>
 
     //<editor-folder desc="drawable method">
@@ -425,16 +439,6 @@ public class FTextDrawable extends Drawable implements Drawable.Callback{
         immutableParams.blockFlag = blockList != null ? blockList.getFlag() : 0;
     }
 
-    public void measure() {
-        if (maxWidth == 0 || maxHeight == 0) {
-            needMeasureText = true;
-            return;
-        }
-        calTextLinesAndContentWidth();
-        calNeedDrawLines();
-        initImmutableParams();
-    }
-
     private void calTextLinesAndContentWidth() {
         if (TextUtils.isEmpty(mText) || blockList == null) {
             textWidth = 0;
@@ -450,7 +454,7 @@ public class FTextDrawable extends Drawable implements Drawable.Callback{
         if (maxWidth == 0) {
             maxWidth = bounds.width();
         }
-        long flag = TextDrawer.measureText(immutableParams, blockList, drawableSize, left, left, left + maxWidth, includePad);
+        long flag = TextDrawer.measureText(immutableParams, blockList, drawableSize, left, left, left + maxWidth, includePad, forceMeasureBlockList);
         if (MeasureTextUtils.getState(flag) == MeasureTextUtils.STATE_SUCCESS) {
             textWidth = MeasureTextUtils.getMaxWidth(flag);
             lines = MeasureTextUtils.getLines(flag);
