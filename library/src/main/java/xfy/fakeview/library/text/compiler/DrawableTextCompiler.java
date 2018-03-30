@@ -2,9 +2,11 @@ package xfy.fakeview.library.text.compiler;
 
 import android.graphics.drawable.Drawable;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import xfy.fakeview.library.text.block.DefaultDrawableBlock;
 import xfy.fakeview.library.text.block.DefaultDrawableBlockList;
+import xfy.fakeview.library.text.param.SpecialStyleParams;
 import xfy.fakeview.library.text.utils.CallbackObserver;
 
 /**
@@ -31,6 +33,10 @@ public class DrawableTextCompiler extends DefaultTextCompiler {
     protected DrawableTextCompiler() {
     }
 
+    public DrawableTextCompiler(ITextCompiler<DefaultDrawableBlockList> innerCompiler) {
+        super(innerCompiler);
+    }
+
     public void setResourceAdapter(ResourceAdapter adapter) {
         this.adapter = adapter;
     }
@@ -40,15 +46,15 @@ public class DrawableTextCompiler extends DefaultTextCompiler {
     }
 
     @Override
-    protected DefaultDrawableBlockList realCompile(@NonNull CharSequence text, int start, int end) {
-        if (adapter == null)
-            return super.realCompile(text, start, end);
-        final DefaultDrawableBlockList list = DefaultDrawableBlockList.obtain(start, end);
-        compileDrawbleText(list, text, start, end);
-        return list;
+    public void compileInternal(@NonNull DefaultDrawableBlockList list, @NonNull CharSequence text, int start, int end, @Nullable SpecialStyleParams specialStyleParams) {
+        if (adapter == null) {
+            super.compileInternal(list, text, start, end, specialStyleParams);
+            return;
+        }
+        compileDrawbleText(list, text, start, end, specialStyleParams);
     }
 
-    protected void compileDrawbleText(DefaultDrawableBlockList list, @NonNull CharSequence text, int start, int end) {
+    private void compileDrawbleText(DefaultDrawableBlockList list, @NonNull CharSequence text, int start, int end, @Nullable SpecialStyleParams specialStyleParams) {
         int index = start;
         boolean haveStart = false;
         int lastStartIndex = -1;
@@ -61,7 +67,7 @@ public class DrawableTextCompiler extends DefaultTextCompiler {
             } else if (c == D_END) {
                 if (haveStart) {
                     if (lastEndIndex != lastStartIndex) {
-                        compileNewLines(list, text.subSequence(lastEndIndex, lastStartIndex));
+                        super.compileInternal(list, text, lastEndIndex, lastStartIndex, specialStyleParams);
                         lastEndIndex = lastStartIndex;
                     }
                     CharSequence parseText = text.subSequence(lastStartIndex, index + 1);
@@ -90,7 +96,7 @@ public class DrawableTextCompiler extends DefaultTextCompiler {
             index ++;
         }
         if (lastEndIndex != index) {
-            compileNewLines(list, text.subSequence(lastEndIndex, index));
+            super.compileInternal(list, text, lastEndIndex, index, specialStyleParams);
         }
     }
 

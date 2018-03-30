@@ -12,6 +12,8 @@ import xfy.fakeview.library.text.param.VariableParams;
  */
 
 public interface IBlock {
+    boolean canSaveToCache();
+
     long getFlag();
 
     long measure(BlockMeasureParams measureParams, @NonNull ImmutableParams immutableParams);

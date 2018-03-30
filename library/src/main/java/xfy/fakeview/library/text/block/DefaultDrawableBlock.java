@@ -24,6 +24,7 @@ import xfy.fakeview.library.text.utils.FClickableSpan;
 import xfy.fakeview.library.text.utils.IllegalDrawableException;
 import xfy.fakeview.library.text.utils.LineUtils;
 import xfy.fakeview.library.text.utils.MeasureTextUtils;
+import xfy.fakeview.library.text.utils.NoCacheSpanRegister;
 
 /**
  * Created by XiongFangyu on 2018/3/2.
@@ -92,6 +93,11 @@ public class DefaultDrawableBlock implements IDrawableBlock<DefaultDrawableBlock
     }
 
     @Override
+    public boolean canSaveToCache() {
+        return !NoCacheSpanRegister.contain(span);
+    }
+
+    @Override
     public long getFlag() {
         return flag;
     }
@@ -129,13 +135,13 @@ public class DefaultDrawableBlock implements IDrawableBlock<DefaultDrawableBlock
     @Override
     public long measure(BlockMeasureParams measureParams, @NonNull ImmutableParams immutableParams) {
         final TextPaint textPaint = immutableParams.paint;
-        final int lineInfo = measureParams.lineInfo;
         final int drawableSize = measureParams.drawableSize;
         final int left = measureParams.left;
         final int currentLeft = measureParams.currentLeft;
         final int right = measureParams.right;
         final boolean includePad = measureParams.includePad;
-        final int top = measureParams.currentTop;
+        int lineInfo = measureParams.lineInfo;
+        int top = measureParams.currentTop;
         int fontHeight = LineUtils.getLineHeight(lineInfo);
         this.baseLine = LineUtils.getBaseLine(lineInfo);
         switch (type) {
@@ -147,6 +153,7 @@ public class DefaultDrawableBlock implements IDrawableBlock<DefaultDrawableBlock
                         int flag = TextDrawer.getLineInfo(textPaint, drawableSize, includePad);
                         fontHeight = LineUtils.getLineHeight(flag);
                         baseLine = LineUtils.getBaseLine(flag);
+                        measureParams.lineInfo = LineUtils.combime(fontHeight, baseLine);
                     }
                 }
                 flag = TextDrawer.measureText(textPaint, mText, currentLeft, left, right, 0);
@@ -162,13 +169,13 @@ public class DefaultDrawableBlock implements IDrawableBlock<DefaultDrawableBlock
                 if (specialDrawable == null) {
                     flag = TextDrawer.measureText(textPaint, mText, currentLeft, left, right, 0);
                 }
-                flag = TextDrawer.measureFixWidth(specialDrawable.getBounds().width(), currentLeft, left, right);
+                flag = TextDrawer.measureFixWidth(TextDrawableDrawer.measureDrawableWidth(specialDrawable, drawableSize), currentLeft, left, right);
                 break;
             case SPECIAL_DRAWABLE:
                 if (specialDrawable == null) {
                     flag = TextDrawer.measureText(textPaint, mText, currentLeft, left, right, 0);
                 }
-                flag = TextDrawer.measureFixWidth(specialDrawable.getBounds().width(), currentLeft, left, right);
+                flag = TextDrawer.measureFixWidth(TextDrawableDrawer.measureDrawableWidth(specialDrawable, drawableSize), currentLeft, left, right);
                 break;
             case NEED_SET_CALLBACK_DRAWABLE:
                 if (!hasCreateNewDrawableForSpecialDrawable) {
@@ -179,7 +186,7 @@ public class DefaultDrawableBlock implements IDrawableBlock<DefaultDrawableBlock
                         hasSetCallback = true;
                     }
                 }
-                flag = TextDrawer.measureFixWidth(specialDrawable.getBounds().width(), currentLeft, left, right);
+                flag = TextDrawer.measureFixWidth(TextDrawableDrawer.measureDrawableWidth(specialDrawable, drawableSize), currentLeft, left, right);
                 break;
             case SPAN:
                 DefaultDrawableBlockList children = getChildren();
@@ -192,6 +199,12 @@ public class DefaultDrawableBlock implements IDrawableBlock<DefaultDrawableBlock
                     immutableParams.addClickSpanBlockInfo(this, currentLeft, top, flag);
                 }
                 break;
+        }
+        measureParams.currentLeft = MeasureTextUtils.getCurrentLeft(flag);
+        int lines = MeasureTextUtils.getLines(flag);
+        if (lines > 1) {
+            top += (lines - 1) * MeasureTextUtils.getMaxHeight(flag);
+            measureParams.currentTop = top;
         }
         return flag;
     }

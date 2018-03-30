@@ -8,4 +8,9 @@ import android.view.View;
 public abstract class FClickableSpan extends BaseSpan{
 
     public abstract void onClick(View v);
+
+    @Override
+    public boolean equals(Object obj) {
+        return this == obj;
+    }
 }

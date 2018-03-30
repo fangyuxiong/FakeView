@@ -36,6 +36,8 @@ public class DefaultDrawableBlockList extends ArrayList<DefaultDrawableBlock> im
     private int lastCLeft = 0;
     private int lastLeft = 0;
     private int lastRight = 0;
+    private float lastTextSize;
+    private boolean canSaveToCache = true;
 
     private static final int DEFAULT_EXPAND_SIZE = 10;
     private int[] lineFlags;
@@ -211,6 +213,11 @@ public class DefaultDrawableBlockList extends ArrayList<DefaultDrawableBlock> im
     private DefaultDrawableBlockList() {}
 
     @Override
+    public boolean canSaveToCache() {
+        return canSaveToCache;
+    }
+
+    @Override
     public long getFlag() {
         return lastFlag;
     }
@@ -263,7 +270,7 @@ public class DefaultDrawableBlockList extends ArrayList<DefaultDrawableBlock> im
         int currentTop = measureParams.currentTop;
         final int left = measureParams.left;
         final int right = measureParams.right;
-        if (drawableSize == lastDrawableSize && lastCLeft == currentLeft && lastLeft == left && lastRight == right && lastFlag != 0) {
+        if (!checkNeedMeasure(measureParams, immutableParams)) {
             return lastFlag;
         }
         long flag = MeasureTextUtils.setLines(0, 1);
@@ -313,7 +320,19 @@ public class DefaultDrawableBlockList extends ArrayList<DefaultDrawableBlock> im
         lastCLeft = currentLeft;
         lastLeft = left;
         lastRight = right;
+        lastTextSize = immutableParams.paint.getTextSize();
         return flag;
+    }
+
+    private boolean checkNeedMeasure(BlockMeasureParams measureParams, @NonNull ImmutableParams immutableParams) {
+        if (measureParams.drawableSize == lastDrawableSize
+                && lastCLeft == measureParams.currentLeft
+                && lastLeft == immutableParams.left
+                && lastRight == immutableParams.right
+                && lastTextSize == immutableParams.paint.getTextSize()
+                && lastFlag != 0)
+            return false;
+        return true;
     }
 
     private int getLastLineHeight() {
@@ -365,6 +384,9 @@ public class DefaultDrawableBlockList extends ArrayList<DefaultDrawableBlock> im
                 hasSpan = true;
                 if (!hasNeedSetCallbackBlock) {
                     hasNeedSetCallbackBlock = block.getChildren().hasNeedSetCallbackBlock;
+                }
+                if (canSaveToCache) {
+                    canSaveToCache = block.canSaveToCache();
                 }
 //                mDrawableCount += block.getChildren().getNewLineCount();
 //                mNewLineCount += block.getChildren().getNewLineCount();

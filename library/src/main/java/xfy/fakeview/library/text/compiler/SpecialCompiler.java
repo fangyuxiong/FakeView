@@ -1,6 +1,7 @@
 package xfy.fakeview.library.text.compiler;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
 import java.util.HashMap;
@@ -36,6 +37,11 @@ public class SpecialCompiler extends DefaultTextCompiler {
         adapterMap = new HashMap<>();
     }
 
+    public SpecialCompiler(ITextCompiler<DefaultDrawableBlockList> innerCompiler) {
+        super(innerCompiler);
+        adapterMap = new HashMap<>();
+    }
+
     protected @NonNull String getReg() {
         return RICH_REG;
     }
@@ -66,9 +72,7 @@ public class SpecialCompiler extends DefaultTextCompiler {
     private Pattern pattern;
 
     @Override
-    protected DefaultDrawableBlockList realCompile(@NonNull CharSequence text, int start, int end) {
-        DefaultDrawableBlockList list = DefaultDrawableBlockList.obtain(start, end);
-
+    public void compileInternal(@NonNull DefaultDrawableBlockList list, @NonNull CharSequence text, int start, int end, @Nullable SpecialStyleParams specialStyleParams) {
         CharSequence sub = text.subSequence(start, end);
         Matcher m = getPattern().matcher(sub);
         int lastEnd = start;
@@ -78,15 +82,14 @@ public class SpecialCompiler extends DefaultTextCompiler {
             int ge = m.end();
             int ss = getStyleStart(gs);
             if (lastEnd < ss) {
-                compileNewLines(list, sub.subSequence(lastEnd, ss));
+                super.compileInternal(list, sub, lastEnd, ss, specialStyleParams);
             }
-            compileSpecialText(list, t);
+            compileSpecialText(list, t, specialStyleParams);
             lastEnd = getStyleEnd(ge);
         }
         if (lastEnd < end) {
-            compileNewLines(list, sub.subSequence(lastEnd, end));
+            super.compileInternal(list, sub, lastEnd, end, specialStyleParams);
         }
-        return list;
     }
 
     protected int getStyleStart(int start) {
@@ -101,24 +104,24 @@ public class SpecialCompiler extends DefaultTextCompiler {
         return text.indexOf(getStyleEnd());
     }
 
-    private void compileSpecialText(DefaultDrawableBlockList list, String text) {
+    private void compileSpecialText(DefaultDrawableBlockList list, String text, @Nullable SpecialStyleParams specialStyleParams) {
         int index = getTextStyleEndIndex(text);
         if (index < 0) {
-            compileNewLines(list, text);
+            super.compileInternal(list, text, 0, text.length(), specialStyleParams);
             return;
         }
         final String styles = text.substring(0, index);
         final String content = text.substring(index + 1);
         if (TextUtils.isEmpty(styles)) {
-            compileNewLines(list, content);
+            super.compileInternal(list, content, 0, content.length(), specialStyleParams);
             return;
         }
         final String[] ss = styles.split(getStyleSplit());
         if (ss == null || ss.length == 0) {
-            compileNewLines(list, content);
+            super.compileInternal(list, content, 0, content.length(), specialStyleParams);
             return;
         }
-        SpecialStyleParams specialStyleParams = SpecialStyleParams.obtain();
+        SpecialStyleParams inner = SpecialStyleParams.obtain();
         for (int i = 0, l = ss.length; i < l; i ++) {
             String style = ss[i];
             String[] param = style.split(getStyleParamsSplit());
@@ -139,9 +142,9 @@ public class SpecialCompiler extends DefaultTextCompiler {
             }
             if (value.length() == 0)
                 continue;
-            adapter.setStyle(specialStyleParams, value);
+            adapter.setStyle(inner, value);
         }
-        compileNewLines(list, content, specialStyleParams);
+        super.compileInternal(list, content, 0, content.length(), inner);
     }
 
     private final HashMap<String, SpecialStyleAdapter> adapterMap;
