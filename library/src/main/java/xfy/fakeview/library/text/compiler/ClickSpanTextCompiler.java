@@ -1,10 +1,12 @@
 package xfy.fakeview.library.text.compiler;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.text.Spanned;
 
 import xfy.fakeview.library.text.block.DefaultDrawableBlock;
 import xfy.fakeview.library.text.block.DefaultDrawableBlockList;
+import xfy.fakeview.library.text.param.SpecialStyleParams;
 import xfy.fakeview.library.text.utils.FClickableSpan;
 
 /**
@@ -25,14 +27,17 @@ public class ClickSpanTextCompiler extends DefaultTextCompiler {
 
     protected ClickSpanTextCompiler() {}
 
+    public ClickSpanTextCompiler(ITextCompiler<DefaultDrawableBlockList> innerCompiler) {
+        super(innerCompiler);
+    }
+
     @Override
-    protected DefaultDrawableBlockList realCompile(@NonNull CharSequence text, int start, int end) {
+    public void compileInternal(@NonNull DefaultDrawableBlockList list, @NonNull CharSequence text, int start, int end, @Nullable SpecialStyleParams specialStyleParams) {
         if (text instanceof Spanned) {
             Spanned spanned = (Spanned) text;
             FClickableSpan[] spans = spanned.getSpans(start, end, FClickableSpan.class);
             int len = spans == null ? 0 : spans.length;
             if (len > 0) {
-                DefaultDrawableBlockList list = DefaultDrawableBlockList.obtain(start, end);
                 FClickableSpan span = null;
                 int spanStart = 0;
                 int lastSpanEnd = start;
@@ -40,20 +45,21 @@ public class ClickSpanTextCompiler extends DefaultTextCompiler {
                     span = spans[i];
                     spanStart = spanned.getSpanStart(span);
                     if (lastSpanEnd < spanStart)
-                        compileNewLines(list, text.subSequence(lastSpanEnd, spanStart));
+                        super.compileInternal(list, text, lastSpanEnd, spanStart, specialStyleParams);
                     lastSpanEnd = spanned.getSpanEnd(span);
-                    compileSpan(list, span, text, spanStart, lastSpanEnd);
+                    compileSpan(list, span, text, spanStart, lastSpanEnd, specialStyleParams);
                 }
                 if (lastSpanEnd < end)
-                    compileNewLines(list, text.subSequence(lastSpanEnd, end));
-                return list;
+                    super.compileInternal(list, text, lastSpanEnd, end, specialStyleParams);
+                return;
             }
         }
-        return super.realCompile(text, start, end);
+        super.compileInternal(list, text, start, end, specialStyleParams);
     }
 
-    protected void compileSpan(DefaultDrawableBlockList list, FClickableSpan span, CharSequence text, int start, int end) {
-        DefaultDrawableBlockList children = super.realCompile(text, start, end);
+    private void compileSpan(DefaultDrawableBlockList list, FClickableSpan span, CharSequence text, int start, int end, @Nullable SpecialStyleParams specialStyleParams) {
+        DefaultDrawableBlockList children = DefaultDrawableBlockList.obtain(start, end);
+        super.compileInternal(children, text, start, end, specialStyleParams);
         list.add(DefaultDrawableBlock.createSpanBlock(text.subSequence(start, end), span, children));
     }
 }

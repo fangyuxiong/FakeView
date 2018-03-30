@@ -1,6 +1,7 @@
 package xfy.fakeview.library.text.compiler;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.LruCache;
 
@@ -26,24 +27,37 @@ public class DefaultTextCompiler implements ITextCompiler<DefaultDrawableBlockLi
         return compiler;
     }
 
-    private final LruCache<CharSequence, DefaultDrawableBlockList> cache;
+    private LruCache<CharSequence, DefaultDrawableBlockList> cache;
+    protected ITextCompiler<DefaultDrawableBlockList> innerCompiler;
 
     protected DefaultTextCompiler() {
-        cache = new LruCache<CharSequence, DefaultDrawableBlockList>(cacheSize()) {
-            @Override
-            protected void entryRemoved(boolean evicted, CharSequence key, DefaultDrawableBlockList oldValue, DefaultDrawableBlockList newValue) {
-                if (oldValue != null) {
-                    oldValue.canRecycle();
+        if (cacheSize() > 0) {
+            cache = new LruCache<CharSequence, DefaultDrawableBlockList>(cacheSize()) {
+                @Override
+                protected void entryRemoved(boolean evicted, CharSequence key, DefaultDrawableBlockList oldValue, DefaultDrawableBlockList newValue) {
+                    if (oldValue != null) {
+                        oldValue.canRecycle();
+                    }
+                    if (newValue != null) {
+                        newValue.doNotRecycle();
+                    }
                 }
-                if (newValue != null) {
-                    newValue.doNotRecycle();
-                }
-            }
-        };
+            };
+        }
+    }
+
+    public DefaultTextCompiler(ITextCompiler<DefaultDrawableBlockList> innerCompiler) {
+        this();
+        setInnerCompiler(innerCompiler);
     }
 
     protected int cacheSize() {
         return 30;
+    }
+
+    @Override
+    public void setInnerCompiler(@Nullable ITextCompiler<DefaultDrawableBlockList> compiler) {
+        innerCompiler = compiler;
     }
 
     @Override
@@ -65,35 +79,34 @@ public class DefaultTextCompiler implements ITextCompiler<DefaultDrawableBlockLi
             end = size;
         }
 
-        DefaultDrawableBlockList result = cache.get(text);
+        DefaultDrawableBlockList result = cache != null ? cache.get(text) : null;
         if (result != null && result.getStart() == start && result.getEnd() == end) {
             result.use();
             return result;
         }
-        result = realCompile(text, start, end);
+        result = DefaultDrawableBlockList.obtain(start, end);
+        compileInternal(result, text, start, end, null);
         result.use();
-        result.doNotRecycle();
-        DefaultDrawableBlockList pre = cache.put(text, result);
-        if (pre != null) {
-            pre.canRecycle();
+        if (cache != null && result.canSaveToCache()) {
+            result.doNotRecycle();
+            DefaultDrawableBlockList pre = cache.put(text, result);
+            if (pre != null) {
+                pre.canRecycle();
+            }
         }
         return result;
     }
 
-    protected DefaultDrawableBlockList realCompile(@NonNull CharSequence text, int start, int end) {
-        DefaultDrawableBlockList list = DefaultDrawableBlockList.obtain(start, end);
-//        if (start > 0) {
-//            list.add(DefaultDrawableBlock.createTextBlock(text.subSequence(0, start), null));
-//        }
-        compileNewLines(list, text.subSequence(start, end));
-        return list;
+    @Override
+    public void compileInternal(@NonNull DefaultDrawableBlockList list, @NonNull CharSequence text, int start, int end, @Nullable SpecialStyleParams specialStyleParams) {
+        if (innerCompiler != null) {
+            innerCompiler.compileInternal(list, text, start, end, specialStyleParams);
+        } else {
+            compileNewLines(list, text.subSequence(start, end), specialStyleParams);
+        }
     }
 
-    protected void compileNewLines(DefaultDrawableBlockList list, CharSequence t) {
-        compileNewLines(list, t, null);
-    }
-
-    protected void compileNewLines(DefaultDrawableBlockList list, CharSequence t, SpecialStyleParams specialStyleParams) {
+    private void compileNewLines(DefaultDrawableBlockList list, CharSequence t, SpecialStyleParams specialStyleParams) {
         if (t.length() == 0)
             return;
         String text = t.toString();

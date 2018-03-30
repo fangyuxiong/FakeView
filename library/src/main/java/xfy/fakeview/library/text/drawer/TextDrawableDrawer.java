@@ -86,36 +86,15 @@ public class TextDrawableDrawer {
             }
         }
 
-        Rect bounds = drawable.getBounds();
-        if (bounds.height() != drawableHeight) {
-            int dw;
-            final int diw = drawable.getIntrinsicWidth();
-            final float dih = drawable.getIntrinsicHeight();
-            if (dih != 0) {
-                dw = (int) (diw * drawableHeight / dih);
-            } else {
-                dw = drawableHeight;
-            }
-            drawable.setBounds(0, 0, dw, drawableHeight);
-        }
+        initDrawableBounds(drawable, drawableHeight);
         return drawable;
     }
 
     public void drawSpecialDrawable(Canvas canvas, Drawable drawable,
                                            @NonNull VariableParams variableParams, @NonNull ImmutableParams immutableParams) {
         int dh = immutableParams.drawableHeight;
-        Rect bounds = drawable.getBounds();
-        int dw = bounds.width();
-        if (bounds.height() != dh) {
-            final int diw = drawable.getIntrinsicWidth();
-            final float dih = drawable.getIntrinsicHeight();
-            if (dih != 0) {
-                dw = (int) (diw * dh / dih);
-            } else {
-                dw = dh;
-            }
-            drawable.setBounds(0, 0, dw, dh);
-        }
+        initDrawableBounds(drawable, dh);
+        int dw = measureDrawableWidth(drawable, dh);
 
         int maxWidth = TextDrawer.getDrawMaxWidthFronNow(variableParams, immutableParams);
         if (maxWidth < 0) {
@@ -126,14 +105,44 @@ public class TextDrawableDrawer {
         }
 
         canvas.save();
+        float scale = measureDrawableScale(drawable, dh);
         canvas.translate(variableParams.currentLeft, variableParams.currentTop);
+        canvas.scale(scale, scale);
         drawable.draw(canvas);
         canvas.restore();
         variableParams.currentLeft += dw;
+    }
+
+    private static void initDrawableBounds(Drawable d, int dh) {
+        Rect bounds = d.getBounds();
+        int bw = bounds.width();
+        int bh = bounds.height();
+        int iw = d.getIntrinsicWidth();
+        int ih = d.getIntrinsicHeight();
+        if ((bw == 0 || bh == 0) || (bw * ih != bh * iw)) {
+            if (iw == 0 || ih == 0) {
+                d.setBounds(0, 0, dh, dh);
+            } else {
+                d.setBounds(0, 0, iw, ih);
+            }
+        }
     }
 
     protected Resources getResources() {
         return context.getResources();
     }
 
+    public static int measureDrawableWidth(Drawable d, int drawableSize) {
+        int iw = d.getIntrinsicWidth();
+        int ih = d.getIntrinsicHeight();
+        if (ih == 0)
+            return drawableSize;
+        return drawableSize * iw / ih;
+    }
+
+    private static float measureDrawableScale(Drawable d, int dh) {
+        Rect bounds = d.getBounds();
+        float bh = bounds.height();
+        return dh / bh;
+    }
 }
