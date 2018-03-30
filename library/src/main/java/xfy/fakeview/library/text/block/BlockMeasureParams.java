@@ -11,6 +11,7 @@ public class BlockMeasureParams {
     public int left;
     public int right;
     public boolean includePad;
+    public boolean forceMeasure;
 
     private BlockMeasureParams() {}
 
@@ -50,6 +51,11 @@ public class BlockMeasureParams {
 
     public BlockMeasureParams setIncludePad(boolean includePad) {
         this.includePad = includePad;
+        return this;
+    }
+
+    public BlockMeasureParams setForceMeasure(boolean force) {
+        forceMeasure = force;
         return this;
     }
 }

@@ -114,6 +114,10 @@ public class NewTextView extends View implements FTextDrawable.LayoutRequestList
         textDrawable.setIncludePad(inlucdePad);
     }
 
+    public void setForceMeasureBlockList(boolean force) {
+        textDrawable.setForceMeasureBlockList(force);
+    }
+
     @Override
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();

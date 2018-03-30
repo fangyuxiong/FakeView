@@ -325,6 +325,8 @@ public class DefaultDrawableBlockList extends ArrayList<DefaultDrawableBlock> im
     }
 
     private boolean checkNeedMeasure(BlockMeasureParams measureParams, @NonNull ImmutableParams immutableParams) {
+        if (measureParams.forceMeasure)
+            return true;
         if (measureParams.drawableSize == lastDrawableSize
                 && lastCLeft == measureParams.currentLeft
                 && lastLeft == immutableParams.left
