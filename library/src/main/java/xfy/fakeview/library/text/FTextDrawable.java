@@ -333,6 +333,10 @@ public class FTextDrawable extends Drawable implements Drawable.Callback{
     public void setForceMeasureBlockList(boolean force) {
         forceMeasureBlockList = force;
     }
+
+    public void setLayoutTextByGravity(boolean auto) {
+        immutableParams.translateByGravity = auto;
+    }
     //</editor-folder>
 
     //<editor-folder desc="drawable method">

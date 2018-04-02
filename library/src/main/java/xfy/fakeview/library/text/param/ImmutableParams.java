@@ -39,6 +39,8 @@ public class ImmutableParams {
     public int[] lineInfos;
     //整个block的flag
     public long blockFlag;
+    //自动根据gravity布局
+    public boolean translateByGravity = true;
     //一个blocklist里所有的可点击的block
     public ArrayList<ClickSpanBlockInfo> clickSpanBlockInfos = new ArrayList<>();
 

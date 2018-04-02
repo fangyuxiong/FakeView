@@ -88,6 +88,7 @@ public class TextDrawer {
         int breakPoint;
         final int right = immutableParams.right;
         final TextUtils.TruncateAt ellipsize = immutableParams.truncateAt;
+        boolean drawError = false;
         while (textWidth + variableParams.currentLeft > right) {
             final int maxWidth = getDrawMaxWidthFronNow(variableParams, immutableParams);
             final int rmw = maxWidth < 0 ? -maxWidth : maxWidth;
@@ -113,16 +114,23 @@ public class TextDrawer {
                 }
                 return;
             }
+            if (variableParams.currentDrawLine >= immutableParams.needDrawLine - 1) {
+                drawError = true;
+                variableParams.isDrawEndEllipsize = true;
+                break;
+            }
             toNewDrawLine(variableParams, immutableParams);
             text = text.subSequence(breakPoint, text.length());
             textWidth = (int) Math.ceil(textPaint.measureText(text, 0, text.length()));
         }
 
-        if (backPaint != null) {
-            drawBack(canvas, backPaint, textWidth, variableParams, immutableParams);
+        if (!drawError) {
+            if (backPaint != null) {
+                drawBack(canvas, backPaint, textWidth, variableParams, immutableParams);
+            }
+            canvas.drawText(text, 0, text.length(), variableParams.currentLeft, variableParams.currentBaseline, textPaint);
+            variableParams.currentLeft += textWidth;
         }
-        canvas.drawText(text, 0, text.length(), variableParams.currentLeft, variableParams.currentBaseline, textPaint);
-        variableParams.currentLeft += textWidth;
 
         if (styleParams != null) {
             restorePaint(textPaint, oldFColor, oldUnderline, oldFakeBold, textSkewX, oldTextSize, oldType);
