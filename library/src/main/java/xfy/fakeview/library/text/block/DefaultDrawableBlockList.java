@@ -174,17 +174,26 @@ public class DefaultDrawableBlockList extends ArrayList<DefaultDrawableBlock> im
     }
 
     private void traslateCanvas(Canvas canvas, ImmutableParams params) {
+        if (!params.translateByGravity)
+            return;
         final int textWidth = MeasureTextUtils.getMaxWidth(params.blockFlag);
         final int textHeight = getAllLineHeight(params);
         if (textHeight == 0)
             return;
         final int gravity = params.gravity;
-        long flag = SimpleGravity.apply(gravity, params.left, params.top, params.right, params.bottom, textWidth, textHeight);
-        int tx = SimpleGravity.getLeft(flag) - params.left;
-        int ty = SimpleGravity.getTop(flag) - params.top;
+        translateByGravity(canvas, gravity, params.left, params.top, params.right, params.bottom, textWidth, textHeight);
+    }
+
+    public static boolean translateByGravity(Canvas canvas, int gravity, int l, int t, int r, int b, int textWidth, int textHeight) {
+        if (textHeight == 0)
+            return false;
+        long flag = SimpleGravity.apply(gravity, l, t, r, b, textWidth, textHeight);
+        int tx = SimpleGravity.getLeft(flag) - l;
+        int ty = SimpleGravity.getTop(flag) - t;
         if (tx == 0 && ty == 0)
-            return;
+            return false;
         canvas.translate(tx, ty);
+        return true;
     }
 
     private int getAllLineHeight(ImmutableParams params) {
