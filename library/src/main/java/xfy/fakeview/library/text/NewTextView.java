@@ -110,7 +110,7 @@ public class NewTextView extends View implements FTextDrawable.LayoutRequestList
         textDrawable.setGravity(gravity);
     }
 
-    public void setInlucdePad(boolean inlucdePad) {
+    public void setIncludePad(boolean inlucdePad) {
         textDrawable.setIncludePad(inlucdePad);
     }
 
