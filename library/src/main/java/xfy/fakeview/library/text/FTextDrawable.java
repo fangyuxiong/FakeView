@@ -144,6 +144,10 @@ public class FTextDrawable extends Drawable implements Drawable.Callback{
         }
     }
 
+    public CharSequence getText() {
+        return mText;
+    }
+
     public void setText(CharSequence text) {
         if (TextUtils.isEmpty(text))
             text = null;
@@ -231,6 +235,11 @@ public class FTextDrawable extends Drawable implements Drawable.Callback{
                 invalidateSelf();
             }
         }
+    }
+
+    public void justSetMaxSize(int maxWidth, int maxHeight) {
+        this.maxWidth = maxWidth;
+        this.maxHeight = maxHeight;
     }
 
     public void setMaxWidth(int maxWidth) {
