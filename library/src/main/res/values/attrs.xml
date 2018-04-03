@@ -5,6 +5,7 @@
         <attr name="fntv_drawable_size" format="dimension"/>
         <attr name="fntv_drawable_scale" format="float"/>
         <attr name="fntv_measure_when_set_text" format="boolean"/>
+        <attr name="fntv_ellepsize_text" format="string"/>
         <attr name="fntv_text_compiler" format="string|enum">
             <enum name="text_only" value="0"/>
             <enum name="contain_image" value="1"/>

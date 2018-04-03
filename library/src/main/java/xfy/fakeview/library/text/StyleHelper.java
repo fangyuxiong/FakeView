@@ -16,6 +16,7 @@ import xfy.fakeview.library.text.compiler.DefaultTextCompiler;
 import xfy.fakeview.library.text.compiler.DrawableTextCompiler;
 import xfy.fakeview.library.text.compiler.ITextCompiler;
 import xfy.fakeview.library.text.compiler.SpecialTextHelper;
+import xfy.fakeview.library.text.drawer.TextDrawer;
 
 /**
  * Created by XiongFangyu on 2018/3/20.
@@ -59,6 +60,7 @@ public class StyleHelper {
     public CharSequence text;
     public boolean measureWhenSetText = false;
     public ITextCompiler textCompiler;
+    public String ellipsizeText = TextDrawer.ELLIPSIZE_TEXT;
 
     public StyleHelper(Context context, @Nullable AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         if (context == null || attrs == null)
@@ -104,6 +106,10 @@ public class StyleHelper {
                     measureWhenSetText = appearance.getBoolean(attr, measureWhenSetText);
                 } else if (attr == R.styleable.FNewTextView_fntv_text_compiler) {
                     setTextCompiler(context, appearance, attr);
+                } else if (attr == R.styleable.FNewTextView_fntv_ellepsize_text) {
+                    String ellipsizeText = appearance.getString(attr);
+                    if (!TextUtils.isEmpty(ellipsizeText))
+                        this.ellipsizeText = ellipsizeText;
                 }
             }
             appearance.recycle();

@@ -47,7 +47,6 @@ public class FTextDrawable extends Drawable implements Drawable.Callback{
     protected int lines;
     protected int needDrawLines;
     protected boolean isNeedEllipsize;
-    protected int ellipsizeLength;
     protected int drawableSize;
     protected boolean includePad = true;
 
@@ -103,6 +102,7 @@ public class FTextDrawable extends Drawable implements Drawable.Callback{
             setText(helper.text);
         }
         setGravity(helper.gravity);
+        setEllipsizeText(helper.ellipsizeText);
     }
 
     //<editor-folder desc="public method">
@@ -278,13 +278,20 @@ public class FTextDrawable extends Drawable implements Drawable.Callback{
             needMeasureTextLines = true;
             if (!drawableSizeSetted)
                 drawableSize = (int) textSize;
-            ellipsizeLength = TextDrawer.getEllipsizeLength(mTextPaint);
+            immutableParams.ellipsizeLength = TextDrawer.getEllipsizeLength(mTextPaint, immutableParams.ellipsizeText);
             if (mText != null) {
                 if (autoMeasure)
                     measure();
                 requestLayout();
                 invalidateSelf();
             }
+        }
+    }
+
+    public void setEllipsizeText(String ellipsizeText) {
+        if (!TextUtils.equals(immutableParams.ellipsizeText, ellipsizeText)) {
+            immutableParams.ellipsizeText = ellipsizeText;
+            immutableParams.ellipsizeLength = TextDrawer.getEllipsizeLength(mTextPaint, immutableParams.ellipsizeText);
         }
     }
 
@@ -447,7 +454,6 @@ public class FTextDrawable extends Drawable implements Drawable.Callback{
         immutableParams.lines = lines;
         immutableParams.needDrawLine = needDrawLines;
         immutableParams.truncateAt = isNeedEllipsize ? ellipsize : null;
-        immutableParams.ellipsizeLength = ellipsizeLength;
         immutableParams.lineInfos = flags;
         immutableParams.blockFlag = blockList != null ? blockList.getFlag() : 0;
     }

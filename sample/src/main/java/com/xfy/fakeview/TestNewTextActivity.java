@@ -94,7 +94,7 @@ public class TestNewTextActivity extends Activity {
         switcher = findViewByResId(R.id.switcher);
         data = findViewByResId(R.id.data);
         layoutTextView.setTextSize(50);
-        newTextView2.setInlucdePad(false);
+        newTextView2.setIncludePad(false);
         layoutTextView.setVisibility(View.GONE);
         normal_text.setVisibility(View.GONE);
 //        View v = findViewById(R.id.test);
