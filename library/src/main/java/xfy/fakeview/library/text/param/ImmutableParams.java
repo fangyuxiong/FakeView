@@ -7,6 +7,7 @@ import android.view.Gravity;
 import java.util.ArrayList;
 
 import xfy.fakeview.library.text.block.IDrawableBlock;
+import xfy.fakeview.library.text.drawer.TextDrawer;
 
 /**
  * 不可变参数
@@ -41,6 +42,8 @@ public class ImmutableParams {
     public long blockFlag;
     //自动根据gravity布局
     public boolean translateByGravity = true;
+    //ellipsize文案
+    public String ellipsizeText = TextDrawer.ELLIPSIZE_TEXT;
     //一个blocklist里所有的可点击的block
     public ArrayList<ClickSpanBlockInfo> clickSpanBlockInfos = new ArrayList<>();
 

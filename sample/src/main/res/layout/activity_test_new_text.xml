@@ -62,7 +62,7 @@
         android:textColor="#f00"
         android:lineSpacingExtra="0px"
         android:text="test"
-        app:fntv_text_compiler="click_span"
+        app:fntv_text_compiler="text_only"
         android:background="#a0f0"/>
 
     <com.xfy.fakeview.TraceTextView

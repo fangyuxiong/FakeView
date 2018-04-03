@@ -28,7 +28,7 @@ public class TextDrawer {
     private static boolean DEBUG = false;
     private static Paint debugPaint;
 
-    private static final String ELLIPSIZE_TEXT = "...";
+    public static final String ELLIPSIZE_TEXT = "...";
 
     public static void setDebug(boolean debug) {
         DEBUG = debug;
@@ -278,7 +278,7 @@ public class TextDrawer {
     public static void drawEllipsize(Canvas canvas,
                                       @NonNull VariableParams variableParams, @NonNull ImmutableParams immutableParams) {
         final TextPaint textPaint = immutableParams.paint;
-        canvas.drawText(ELLIPSIZE_TEXT, variableParams.currentLeft, variableParams.currentBaseline, textPaint);
+        canvas.drawText(immutableParams.ellipsizeText, variableParams.currentLeft, variableParams.currentBaseline, textPaint);
         variableParams.currentLeft += immutableParams.ellipsizeLength;
         variableParams.isDrawEndEllipsize = true;
     }
@@ -396,8 +396,8 @@ public class TextDrawer {
         return includePad ? fontMetricsInt.bottom : fontMetricsInt.descent;
     }
 
-    public static int getEllipsizeLength(TextPaint paint) {
-        return (int) Math.ceil(paint.measureText(ELLIPSIZE_TEXT));
+    public static int getEllipsizeLength(TextPaint paint, String ellipsizeText) {
+        return (int) Math.ceil(paint.measureText(ellipsizeText));
     }
 
     private static long nano() {
