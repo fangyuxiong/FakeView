@@ -57,8 +57,8 @@ public class ClickSpanTextCompiler extends DefaultTextCompiler {
         super.compileInternal(list, text, start, end, specialStyleParams);
     }
 
-    private void compileSpan(DefaultDrawableBlockList list, FClickableSpan span, CharSequence text, int start, int end, @Nullable SpecialStyleParams specialStyleParams) {
-        DefaultDrawableBlockList children = DefaultDrawableBlockList.obtain(start, end);
+    protected void compileSpan(DefaultDrawableBlockList list, FClickableSpan span, CharSequence text, int start, int end, @Nullable SpecialStyleParams specialStyleParams) {
+        DefaultDrawableBlockList children = DefaultDrawableBlockList.obtain(false, start, end);
         super.compileInternal(children, text, start, end, specialStyleParams);
         list.add(DefaultDrawableBlock.createSpanBlock(text.subSequence(start, end), span, children));
     }

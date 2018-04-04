@@ -17,6 +17,7 @@ import android.view.View;
 import xfy.fakeview.library.text.compiler.DefaultTextCompiler;
 import xfy.fakeview.library.text.compiler.ITextCompiler;
 import xfy.fakeview.library.text.drawer.TextDrawableDrawer;
+import xfy.fakeview.library.text.utils.MeasureTextUtils;
 
 /**
  * Created by XiongFangyu on 2018/3/1.
@@ -24,6 +25,8 @@ import xfy.fakeview.library.text.drawer.TextDrawableDrawer;
 public class NewTextView extends View implements FTextDrawable.LayoutRequestListener {
     private static final String TAG = "Fake--NewTextView";
     private final FTextDrawable textDrawable;
+    private int maxWidth;
+    private int maxHeight;
 
     public NewTextView(Context context) {
         this(context, null);
@@ -35,23 +38,29 @@ public class NewTextView extends View implements FTextDrawable.LayoutRequestList
 
     public NewTextView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        textDrawable = new FTextDrawable(context, attrs, defStyleAttr, 0);
-        init();
+        StyleHelper styleHelper = new StyleHelper(context, attrs, defStyleAttr, 0);
+        textDrawable = new FTextDrawable(styleHelper);
+        init(styleHelper);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     public NewTextView(Context context, @Nullable AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
-        textDrawable = new FTextDrawable(context, attrs, defStyleAttr, defStyleRes);
-        init();
+        StyleHelper styleHelper = new StyleHelper(context, attrs, defStyleAttr, defStyleRes);
+        textDrawable = new FTextDrawable(styleHelper);
+        init(styleHelper);
     }
 
-    private void init() {
+    private void init(StyleHelper helper) {
         TextDrawableDrawer.init(getContext());
         textDrawable.setCallback(this);
         textDrawable.setLayoutRequestListener(this);
         if (textDrawable.getCompiler() == null)
             textDrawable.setTextCompiler(getDefaultCompiler());
+        if (helper == null)
+            return;
+        maxWidth = helper.maxWidth;
+        maxHeight = helper.maxHeight;
     }
 
     public FTextDrawable getTextDrawable() {
@@ -132,9 +141,6 @@ public class NewTextView extends View implements FTextDrawable.LayoutRequestList
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        if (!textDrawable.isAutoMeasure()) {
-            textDrawable.measure();
-        }
         int widthMode  = MeasureSpec.getMode(widthMeasureSpec);
         int heightMode = MeasureSpec.getMode(heightMeasureSpec);
         int widthSize  = MeasureSpec.getSize(widthMeasureSpec);
@@ -146,30 +152,32 @@ public class NewTextView extends View implements FTextDrawable.LayoutRequestList
         int pt = getPaddingTop();
         int pr = getPaddingRight();
         int pb = getPaddingBottom();
-        int maxWidth = widthSize - pl - pr;
-        int maxHeight = heightSize - pt - pb;
+        int maxWidth = (widthSize == 0 ? this.maxWidth : widthSize) - pl - pr;
+        int maxHeight = (heightSize == 0 ? this.maxHeight : heightSize) - pl - pr;
+        maxHeight = maxHeight == 0 ? MeasureTextUtils.HEIGHT_MAX_SIZE : maxHeight;
+        textDrawable.setMaxWidth(maxWidth);
+        textDrawable.setMaxHeight(maxHeight);
+        if (!textDrawable.isAutoMeasure()) {
+            textDrawable.measure();
+        }
 
         if (widthMode == MeasureSpec.EXACTLY) {
             width = widthSize;
         } else {
-            width = textDrawable.getIntrinsicWidth() + pl + pr;
-            width = Math.max(width, getSuggestedMinimumWidth());
+            width = Math.max(textDrawable.getIntrinsicWidth(), getSuggestedMinimumWidth());
             if (widthMode == MeasureSpec.AT_MOST) {
                 width = Math.min(widthSize, width);
             }
         }
-        textDrawable.setMaxWidth(maxWidth);
 
         if (heightMode == MeasureSpec.EXACTLY) {
             height = heightSize;
         } else {
-            height = textDrawable.getIntrinsicHeight() + pt + pb;
-            height = Math.max(height, getSuggestedMinimumHeight());
+            height = Math.max(textDrawable.getIntrinsicHeight(), getSuggestedMinimumHeight());
             if (heightMode == MeasureSpec.AT_MOST) {
                 height = Math.min(heightSize, height);
             }
         }
-        textDrawable.setMaxHeight(maxHeight);
         setMeasuredDimension(width, height);
         textDrawable.setBounds(pl, pt, width - pr, height - pb);
     }

@@ -345,6 +345,9 @@ public class TextDrawer {
 
     public static long measureText(@NonNull ImmutableParams immutableParams, IDrawableBlockList list, int drawableSize,
                                    int currentLeft, int left, int right, boolean includePad, boolean forceMeasure) {
+        if (!list.hasDrawable()) {
+            drawableSize = 0;
+        }
         BlockMeasureParams params = BlockMeasureParams.obtain()
                 .setLineInfo(getLineInfo(immutableParams.paint, drawableSize, includePad))
                 .setDrawableSize(drawableSize)

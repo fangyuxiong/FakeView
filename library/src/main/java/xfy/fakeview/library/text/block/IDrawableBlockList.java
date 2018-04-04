@@ -23,6 +23,8 @@ public interface IDrawableBlockList<E extends IDrawableBlock> extends List<E>, I
 
 //    int getSpecialDrawableCount();
 
+    boolean hasDrawable();
+
     boolean hasSpan();
 
     int[] getLinesHeight();
@@ -38,4 +40,8 @@ public interface IDrawableBlockList<E extends IDrawableBlock> extends List<E>, I
     void canRecycle();
 
     boolean onTouchEvent(@NonNull View v, MotionEvent event, @NonNull ImmutableParams immutableParams);
+
+    boolean isRoot();
+
+    int getNeedSetCallbackCount();
 }

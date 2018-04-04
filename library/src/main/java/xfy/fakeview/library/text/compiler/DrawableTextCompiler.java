@@ -7,7 +7,7 @@ import android.support.annotation.Nullable;
 import xfy.fakeview.library.text.block.DefaultDrawableBlock;
 import xfy.fakeview.library.text.block.DefaultDrawableBlockList;
 import xfy.fakeview.library.text.param.SpecialStyleParams;
-import xfy.fakeview.library.text.utils.CallbackObserver;
+import xfy.fakeview.library.text.utils.IDrawableStats;
 
 /**
  * Created by XiongFangyu on 2018/3/13.
@@ -51,7 +51,30 @@ public class DrawableTextCompiler extends DefaultTextCompiler {
             super.compileInternal(list, text, start, end, specialStyleParams);
             return;
         }
+        adapter.beforeCompile();
         compileDrawbleText(list, text, start, end, specialStyleParams);
+    }
+
+    @Override
+    protected boolean compileSpecialText(DefaultDrawableBlockList list, CharSequence t, @Nullable SpecialStyleParams specialStyleParams) {
+        int res = adapter.parseRes(t);
+        if (res <= 0) {
+            Drawable d = adapter.parseDrawable(t);
+            if (d == null) {
+//                            compileNewLines(list, parseText);
+            } else {
+                if (d instanceof IDrawableStats) {
+                    list.add(DefaultDrawableBlock.createNeedSetCallbackDrawableBlock(t, d));
+                } else {
+                    list.add(DefaultDrawableBlock.createSpecialDrawableBlock(t, d));
+                }
+                return true;
+            }
+        } else {
+            list.add(DefaultDrawableBlock.createDrawableBlock(t, res));
+            return true;
+        }
+        return false;
     }
 
     private void compileDrawbleText(DefaultDrawableBlockList list, @NonNull CharSequence text, int start, int end, @Nullable SpecialStyleParams specialStyleParams) {
@@ -71,21 +94,7 @@ public class DrawableTextCompiler extends DefaultTextCompiler {
                         lastEndIndex = lastStartIndex;
                     }
                     CharSequence parseText = text.subSequence(lastStartIndex, index + 1);
-                    int res = adapter.parseRes(parseText);
-                    if (res <= 0) {
-                        Drawable d = adapter.parseDrawable(parseText);
-                        if (d == null) {
-//                            compileNewLines(list, parseText);
-                        } else {
-                            if (d instanceof CallbackObserver) {
-                                list.add(DefaultDrawableBlock.createNeedSetCallbackDrawableBlock(parseText, d));
-                            } else {
-                                list.add(DefaultDrawableBlock.createSpecialDrawableBlock(parseText, d));
-                            }
-                            lastEndIndex = index + 1;
-                        }
-                    } else {
-                        list.add(DefaultDrawableBlock.createDrawableBlock(parseText, res));
+                    if (compileSpecialText(list, parseText, specialStyleParams)) {
                         lastEndIndex = index + 1;
                     }
                 } else {
@@ -101,6 +110,7 @@ public class DrawableTextCompiler extends DefaultTextCompiler {
     }
 
     public interface ResourceAdapter {
+        void beforeCompile();
         int parseRes(@NonNull CharSequence text);
         Drawable parseDrawable(@NonNull CharSequence text);
     }

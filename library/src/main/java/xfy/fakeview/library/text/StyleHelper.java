@@ -3,6 +3,7 @@ package xfy.fakeview.library.text;
 import android.content.Context;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
+import android.graphics.Color;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.AttributeSet;
@@ -50,10 +51,12 @@ public class StyleHelper {
         ;
         abstract ITextCompiler getCompiler(Context context);
     }
+    public int maxWidth;
+    public int maxHeight;
     public int maxLines = -1;
     public int textSize = -1;
-    public int lineSpace = -1;
-    public int textColor = 0;
+    public int lineSpace = 0;
+    public int textColor = Color.BLACK;
     public int gravity = Gravity.TOP | Gravity.LEFT;
     public float drawableScale = 1;
     public int drawableSize = -1;
@@ -96,7 +99,17 @@ public class StyleHelper {
                     textColor = appearance.getColor(attr, textColor);
                 } else if (attr == R.styleable.FNewTextView_android_gravity) {
                     gravity = appearance.getInt(attr, gravity);
-                }else if (attr == R.styleable.FNewTextView_fntv_drawable_scale) {
+                } else if (attr == R.styleable.FNewTextView_android_maxWidth) {
+                    maxWidth = appearance.getDimensionPixelOffset(attr, maxWidth);
+                    if (maxWidth < 0) {
+                        maxWidth += getScreenWidth(context);
+                    }
+                } else if (attr == R.styleable.FNewTextView_android_maxHeight) {
+                    maxHeight = appearance.getDimensionPixelOffset(attr, maxHeight);
+                    if (maxHeight < 0) {
+                        maxHeight += getScreenHeight(context);
+                    }
+                } else if (attr == R.styleable.FNewTextView_fntv_drawable_scale) {
                     drawableScale = appearance.getFloat(attr, drawableScale);
                 } else if (attr == R.styleable.FNewTextView_fntv_drawable_size) {
                     drawableSize = appearance.getDimensionPixelSize(attr, drawableSize);
@@ -138,5 +151,13 @@ public class StyleHelper {
                 t.printStackTrace();
             }
         }
+    }
+
+    private int getScreenWidth(Context context) {
+        return context.getResources().getDisplayMetrics().widthPixels;
+    }
+
+    private int getScreenHeight(Context context) {
+        return context.getResources().getDisplayMetrics().heightPixels;
     }
 }

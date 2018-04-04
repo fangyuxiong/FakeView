@@ -18,5 +18,7 @@
         <attr name="android:textColor"/>
         <attr name="android:text"/>
         <attr name="android:gravity"/>
+        <attr name="android:maxWidth"/>
+        <attr name="android:maxHeight"/>
     </declare-styleable>
 </resources>

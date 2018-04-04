@@ -104,22 +104,23 @@ public class SpecialCompiler extends DefaultTextCompiler {
         return text.indexOf(getStyleEnd());
     }
 
-    private void compileSpecialText(DefaultDrawableBlockList list, String text, @Nullable SpecialStyleParams specialStyleParams) {
+    protected boolean compileSpecialText(DefaultDrawableBlockList list, CharSequence t, @Nullable SpecialStyleParams specialStyleParams) {
+        String text = t.toString();
         int index = getTextStyleEndIndex(text);
         if (index < 0) {
             super.compileInternal(list, text, 0, text.length(), specialStyleParams);
-            return;
+            return false;
         }
         final String styles = text.substring(0, index);
         final String content = text.substring(index + 1);
         if (TextUtils.isEmpty(styles)) {
             super.compileInternal(list, content, 0, content.length(), specialStyleParams);
-            return;
+            return false;
         }
         final String[] ss = styles.split(getStyleSplit());
         if (ss == null || ss.length == 0) {
             super.compileInternal(list, content, 0, content.length(), specialStyleParams);
-            return;
+            return false;
         }
         SpecialStyleParams inner = SpecialStyleParams.obtain();
         for (int i = 0, l = ss.length; i < l; i ++) {
@@ -145,6 +146,7 @@ public class SpecialCompiler extends DefaultTextCompiler {
             adapter.setStyle(inner, value);
         }
         super.compileInternal(list, content, 0, content.length(), inner);
+        return true;
     }
 
     private final HashMap<String, SpecialStyleAdapter> adapterMap;
