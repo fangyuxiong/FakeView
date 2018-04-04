@@ -28,7 +28,7 @@ allprojects {
         targetSdkVersion=23
         appcompatVersion="24.2.1"
 
-        libVersion="0.70"
+        libVersion="0.71"
     }
 }
 

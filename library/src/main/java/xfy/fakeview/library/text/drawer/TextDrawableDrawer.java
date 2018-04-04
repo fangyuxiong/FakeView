@@ -102,6 +102,8 @@ public class TextDrawableDrawer {
                 TextDrawer.drawEllipsize(canvas, variableParams, immutableParams);
                 return;
             }
+        } else if (maxWidth < dw) {
+            TextDrawer.drawNextLine(canvas, variableParams, immutableParams);
         }
 
         canvas.save();
