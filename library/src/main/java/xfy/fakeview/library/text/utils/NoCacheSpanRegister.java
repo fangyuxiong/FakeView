@@ -10,7 +10,7 @@ public class NoCacheSpanRegister {
 
     static {
         noCacheClz = new ArrayList<>();
-        register(FClickableSpan.class);
+//        register(FClickableSpan.class);
     }
 
     public static void register(Class<? extends BaseSpan> clz) {
