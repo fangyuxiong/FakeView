@@ -39,7 +39,7 @@ public class FTextDrawable extends Drawable implements Drawable.Callback{
     private int maxLines;
     private TextUtils.TruncateAt ellipsize = TextUtils.TruncateAt.END;
     private WeakReference<LayoutRequestListener> listenerRef;
-    private boolean autoMeasure = true;
+    private boolean autoMeasure = false;
 
     protected int textWidth;
     protected int lines;
@@ -233,8 +233,13 @@ public class FTextDrawable extends Drawable implements Drawable.Callback{
     }
 
     public void justSetMaxSize(int maxWidth, int maxHeight) {
+        boolean changed = this.maxWidth != maxWidth || this.maxHeight != maxHeight;
         this.maxWidth = maxWidth;
         this.maxHeight = maxHeight;
+        if (changed && mText != null) {
+            needMeasureTextLines = true;
+            needMeasureText = true;
+        }
     }
 
     public void setMaxWidth(int maxWidth) {

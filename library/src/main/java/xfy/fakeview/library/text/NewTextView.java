@@ -155,8 +155,9 @@ public class NewTextView extends View implements FTextDrawable.LayoutRequestList
         int maxWidth = (widthSize == 0 ? this.maxWidth : widthSize) - pl - pr;
         int maxHeight = (heightSize == 0 ? this.maxHeight : heightSize) - pl - pr;
         maxHeight = maxHeight == 0 ? MeasureTextUtils.HEIGHT_MAX_SIZE : maxHeight;
-        textDrawable.setMaxWidth(maxWidth);
-        textDrawable.setMaxHeight(maxHeight);
+        textDrawable.justSetMaxSize(maxWidth, maxHeight);
+//        textDrawable.setMaxWidth(maxWidth);
+//        textDrawable.setMaxHeight(maxHeight);
         if (!textDrawable.isAutoMeasure()) {
             textDrawable.measure();
         }
