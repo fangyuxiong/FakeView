@@ -84,7 +84,7 @@ public class DefaultTextCompiler implements ITextCompiler<DefaultDrawableBlockLi
             result.use();
             return result;
         }
-        result = DefaultDrawableBlockList.obtain(start, end);
+        result = DefaultDrawableBlockList.obtain(true, start, end);
         compileInternal(result, text, start, end, null);
         result.use();
         if (cache != null && result.canSaveToCache()) {
@@ -104,6 +104,16 @@ public class DefaultTextCompiler implements ITextCompiler<DefaultDrawableBlockLi
         } else {
             compileNewLines(list, text.subSequence(start, end), specialStyleParams);
         }
+    }
+
+    /**
+     * compile special text, implement by child class
+     * @param list parent list
+     * @param t special text
+     * @return true if compile at least one special block, false otherwise
+     */
+    protected boolean compileSpecialText(DefaultDrawableBlockList list, CharSequence t, SpecialStyleParams specialStyleParams) {
+        return false;
     }
 
     private void compileNewLines(DefaultDrawableBlockList list, CharSequence t, SpecialStyleParams specialStyleParams) {

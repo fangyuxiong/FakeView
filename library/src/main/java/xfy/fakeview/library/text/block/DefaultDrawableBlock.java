@@ -19,7 +19,7 @@ import xfy.fakeview.library.text.param.ImmutableParams;
 import xfy.fakeview.library.text.param.SpecialStyleParams;
 import xfy.fakeview.library.text.param.VariableParams;
 import xfy.fakeview.library.text.utils.BaseSpan;
-import xfy.fakeview.library.text.utils.CallbackObserver;
+import xfy.fakeview.library.text.utils.IDrawableStats;
 import xfy.fakeview.library.text.utils.FClickableSpan;
 import xfy.fakeview.library.text.utils.IllegalDrawableException;
 import xfy.fakeview.library.text.utils.LineUtils;
@@ -40,9 +40,9 @@ public class DefaultDrawableBlock implements IDrawableBlock<DefaultDrawableBlock
 
     private final ArrayList<WeakReference<Drawable.Callback>> callbacks;
     private boolean hasCreateNewDrawableForSpecialDrawable;
-    private boolean hasSetCallback;
     private long flag;
     private int baseLine;
+    private int needSetCallbackCount;
 
     private DefaultDrawableBlock() {
         callbacks = new ArrayList<>();
@@ -70,7 +70,6 @@ public class DefaultDrawableBlock implements IDrawableBlock<DefaultDrawableBlock
     public void recycle() {
         callbacks.clear();
         hasCreateNewDrawableForSpecialDrawable = false;
-        hasSetCallback = false;
         span = null;
         flag = 0;
         type = 0;
@@ -81,8 +80,8 @@ public class DefaultDrawableBlock implements IDrawableBlock<DefaultDrawableBlock
         textStyleParams = null;
         drawableRes = 0;
         if (specialDrawable != null) {
-            if (specialDrawable instanceof CallbackObserver) {
-                ((CallbackObserver) specialDrawable).onCallbackSet(null);
+            if (specialDrawable instanceof IDrawableStats) {
+                ((IDrawableStats) specialDrawable).recycle();
             }
         }
         specialDrawable = null;
@@ -90,6 +89,14 @@ public class DefaultDrawableBlock implements IDrawableBlock<DefaultDrawableBlock
             children.notUse();
         children = null;
         putToCache(this);
+    }
+
+    @Override
+    public void onNoOneUse() {
+        if (specialDrawable instanceof IDrawableStats) {
+            ((IDrawableStats) specialDrawable).recycle();
+        } else if (children != null)
+            children.onNoOneUse();
     }
 
     @Override
@@ -179,12 +186,12 @@ public class DefaultDrawableBlock implements IDrawableBlock<DefaultDrawableBlock
                 break;
             case NEED_SET_CALLBACK_DRAWABLE:
                 if (!hasCreateNewDrawableForSpecialDrawable) {
-                    specialDrawable = TextDrawableDrawer.getDrawableDrawer().getSpecialDrawable(specialDrawable, drawableSize, true);
+                    IDrawableStats observer = (IDrawableStats) specialDrawable;
+                    specialDrawable = TextDrawableDrawer.getDrawableDrawer().getSpecialDrawable(specialDrawable, drawableSize, observer.needCreateNewDrawable());
+                    observer = (IDrawableStats) specialDrawable;
                     hasCreateNewDrawableForSpecialDrawable = true;
-                    if (!hasSetCallback) {
-                        ((CallbackObserver) specialDrawable).onCallbackSet(this);
-                        hasSetCallback = true;
-                    }
+                    observer.onCallbackSet(this);
+                    observer.setCountInText(needSetCallbackCount);
                 }
                 flag = TextDrawer.measureFixWidth(TextDrawableDrawer.measureDrawableWidth(specialDrawable, drawableSize), currentLeft, left, right);
                 break;
@@ -305,9 +312,8 @@ public class DefaultDrawableBlock implements IDrawableBlock<DefaultDrawableBlock
         }
         if (needAdd)
             callbacks.add(new WeakReference<Drawable.Callback>(callback));
-        if (!hasSetCallback && hasCreateNewDrawableForSpecialDrawable) {
-            ((CallbackObserver)specialDrawable).onCallbackSet(this);
-            hasSetCallback = true;
+        if (hasCreateNewDrawableForSpecialDrawable) {
+            ((IDrawableStats)specialDrawable).onCallbackSet(this);
         }
     }
 
@@ -320,6 +326,14 @@ public class DefaultDrawableBlock implements IDrawableBlock<DefaultDrawableBlock
                 callbacks.remove(i);
                 continue;
             }
+        }
+    }
+
+    @Override
+    public void setNeedSetCallbackCount(int c) {
+        needSetCallbackCount = c;
+        if (hasCreateNewDrawableForSpecialDrawable) {
+            ((IDrawableStats)specialDrawable).setCountInText(c);
         }
     }
 
@@ -396,8 +410,8 @@ public class DefaultDrawableBlock implements IDrawableBlock<DefaultDrawableBlock
     }
 
     public static DefaultDrawableBlock createNeedSetCallbackDrawableBlock(CharSequence text, Drawable d) {
-        if (!(d instanceof CallbackObserver)) {
-            throw new IllegalDrawableException("drawble " + d.getClass().getName() + " is not a CallbackObserver");
+        if (!(d instanceof IDrawableStats)) {
+            throw new IllegalDrawableException("drawble " + d.getClass().getName() + " is not a IDrawableStats");
         }
         DefaultDrawableBlock block = DefaultDrawableBlock.obtain();
         block.mText = text;

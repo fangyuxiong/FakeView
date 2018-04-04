@@ -10,6 +10,7 @@ import android.view.View;
 import java.util.ArrayList;
 import java.util.List;
 
+import xfy.fakeview.library.DebugInfo;
 import xfy.fakeview.library.text.param.ClickSpanBlockInfo;
 import xfy.fakeview.library.text.param.ImmutableParams;
 import xfy.fakeview.library.text.param.VariableParams;
@@ -28,8 +29,9 @@ public class DefaultDrawableBlockList extends ArrayList<DefaultDrawableBlock> im
 //    private int mNewLineCount;
 //    private int mDrawableCount;
 //    private int mSpecialDrawableCount;
+    private boolean isRoot = false;
     private boolean hasSpan = false;
-    private boolean hasNeedSetCallbackBlock;
+    private int needSetCallbackBlockCount;
 
     private long lastFlag = 0;
     private int lastDrawableSize = 0;
@@ -38,6 +40,7 @@ public class DefaultDrawableBlockList extends ArrayList<DefaultDrawableBlock> im
     private int lastRight = 0;
     private float lastTextSize;
     private boolean canSaveToCache = true;
+    private boolean hasDrawable = false;
 
     private static final int DEFAULT_EXPAND_SIZE = 10;
     private int[] lineFlags;
@@ -55,10 +58,11 @@ public class DefaultDrawableBlockList extends ArrayList<DefaultDrawableBlock> im
         }
     }
 
-    public synchronized static DefaultDrawableBlockList obtain(int start, int end) {
+    public synchronized static DefaultDrawableBlockList obtain(boolean root, int start, int end) {
         if (cache.isEmpty())
             return new DefaultDrawableBlockList(start, end);
         DefaultDrawableBlockList list = cache.remove(0);
+        list.isRoot = root;
         list.mStart = start;
         list.mEnd = end;
         return list;
@@ -72,7 +76,8 @@ public class DefaultDrawableBlockList extends ArrayList<DefaultDrawableBlock> im
         lines = 0;
         lineFlags = null;
         hasSpan = false;
-        hasNeedSetCallbackBlock = false;
+        hasDrawable = false;
+        needSetCallbackBlockCount = 0;
 //        mNewLineCount = 0;
 //        mDrawableCount = 0;
 //        mSpecialDrawableCount = 0;
@@ -98,8 +103,14 @@ public class DefaultDrawableBlockList extends ArrayList<DefaultDrawableBlock> im
         } else {
             useCount --;
         }
-        if (useCount == 0)
+        if (isRoot && DebugInfo.DEBUG) {
+            Log.d(TAG, "on root list not use: " + useCount);
+        }
+        if (useCount == 0) {
             recycle();
+        } else if (useCount == NOT_RECYCLE_COUNT) {
+            onNoOneUse();
+        }
     }
 
     @Override
@@ -119,6 +130,13 @@ public class DefaultDrawableBlockList extends ArrayList<DefaultDrawableBlock> im
     }
 
     @Override
+    public void onNoOneUse() {
+        for (int i = 0, l = size(); i < l;i ++) {
+            get(i).onNoOneUse();
+        }
+    }
+
+    @Override
     public boolean onTouchEvent(@NonNull View v, MotionEvent event, @NonNull ImmutableParams immutableParams) {
         if (!hasSpan() || immutableParams.clickSpanBlockInfos == null || immutableParams.clickSpanBlockInfos.size() == 0)
             return false;
@@ -131,6 +149,23 @@ public class DefaultDrawableBlockList extends ArrayList<DefaultDrawableBlock> im
             }
         }
         return false;
+    }
+
+    @Override
+    public void setNeedSetCallbackCount(int c) {
+        for (int i = 0, l = size(); i < l;i ++) {
+            get(i).setNeedSetCallbackCount(c);
+        }
+    }
+
+    @Override
+    public boolean isRoot() {
+        return isRoot;
+    }
+
+    @Override
+    public int getNeedSetCallbackCount() {
+        return needSetCallbackBlockCount;
     }
 
     @Override
@@ -147,7 +182,7 @@ public class DefaultDrawableBlockList extends ArrayList<DefaultDrawableBlock> im
 
     @Override
     public void addCallback(Drawable.Callback callback) {
-        if (!hasNeedSetCallbackBlock)
+        if (needSetCallbackBlockCount <= 0)
             return;
         for (int i = 0, l = size(); i < l; i ++) {
             IDrawableBlock block = get(i);
@@ -161,7 +196,7 @@ public class DefaultDrawableBlockList extends ArrayList<DefaultDrawableBlock> im
 
     @Override
     public void removeCallback(Drawable.Callback callback) {
-        if (!hasNeedSetCallbackBlock)
+        if (needSetCallbackBlockCount <= 0)
             return;
         for (int i = 0, l = size(); i < l; i ++) {
             IDrawableBlock block = get(i);
@@ -239,6 +274,11 @@ public class DefaultDrawableBlockList extends ArrayList<DefaultDrawableBlock> im
     @Override
     public int getEnd() {
         return mEnd;
+    }
+
+    @Override
+    public boolean hasDrawable() {
+        return hasDrawable;
     }
 
 //    @Override
@@ -380,9 +420,15 @@ public class DefaultDrawableBlockList extends ArrayList<DefaultDrawableBlock> im
             return false;
         switch (block.getType()) {
             case IDrawableBlock.NEED_SET_CALLBACK_DRAWABLE:
-                hasNeedSetCallbackBlock = true;
+                needSetCallbackBlockCount++;
+                if (isRoot)
+                    setNeedSetCallbackCount(needSetCallbackBlockCount);
+                hasDrawable = true;
                 break;
-//            case IDrawableBlock.DRAWABLE:
+            case IDrawableBlock.DRAWABLE:
+            case IDrawableBlock.SPECIAL_DRAWABLE:
+                hasDrawable = true;
+                break;
 //                mDrawableCount ++;
 //                break;
 //            case IDrawableBlock.NEXTLINE:
@@ -393,12 +439,14 @@ public class DefaultDrawableBlockList extends ArrayList<DefaultDrawableBlock> im
 //                break;
             case IDrawableBlock.SPAN:
                 hasSpan = true;
-                if (!hasNeedSetCallbackBlock) {
-                    hasNeedSetCallbackBlock = block.getChildren().hasNeedSetCallbackBlock;
-                }
+                needSetCallbackBlockCount += block.getChildren().needSetCallbackBlockCount;
+                if (isRoot)
+                    setNeedSetCallbackCount(needSetCallbackBlockCount);
                 if (canSaveToCache) {
                     canSaveToCache = block.canSaveToCache();
                 }
+                if (!hasDrawable)
+                    hasDrawable = block.getChildren().hasDrawable;
 //                mDrawableCount += block.getChildren().getNewLineCount();
 //                mNewLineCount += block.getChildren().getNewLineCount();
 //                mSpecialDrawableCount += block.getChildren().getSpecialDrawableCount();

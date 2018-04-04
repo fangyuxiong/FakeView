@@ -12,6 +12,9 @@ import xfy.fakeview.library.text.param.VariableParams;
  */
 
 public interface IBlock {
+
+    void onNoOneUse();
+
     boolean canSaveToCache();
 
     long getFlag();
@@ -23,4 +26,6 @@ public interface IBlock {
     void addCallback(Drawable.Callback callback);
 
     void removeCallback(Drawable.Callback callback);
+
+    void setNeedSetCallbackCount(int c);
 }

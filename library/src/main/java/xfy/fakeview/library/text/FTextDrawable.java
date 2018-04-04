@@ -1,6 +1,5 @@
 package xfy.fakeview.library.text;
 
-import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.ColorFilter;
 import android.graphics.Paint;
@@ -12,7 +11,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextPaint;
 import android.text.TextUtils;
-import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -71,27 +69,22 @@ public class FTextDrawable extends Drawable implements Drawable.Callback{
         immutableParams.paint = mTextPaint;
     }
 
-    public FTextDrawable(Context context, @Nullable AttributeSet attrs, int defStyleAttr, int defStyleRes) {
+    public FTextDrawable(StyleHelper helper) {
         mTextPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
         variableParams = new VariableParams();
         immutableParams = new ImmutableParams();
         immutableParams.paint = mTextPaint;
-        StyleHelper helper = new StyleHelper(context, attrs, defStyleAttr, defStyleRes);
+        if (helper == null)
+            return;
         if (helper.textCompiler != null)
             setTextCompiler(helper.textCompiler);
         setAutoMeasure(helper.measureWhenSetText);
-        if (helper.maxLines > 0) {
-            setMaxLines(helper.maxLines);
-        }
+        setMaxLines(helper.maxLines);
         if (helper.textSize > 0) {
             setTextSize(helper.textSize);
         }
-        if (helper.lineSpace >= 0) {
-            setLineSpace(helper.lineSpace);
-        }
-        if (helper.textColor != 0) {
-            setTextColor(helper.textColor);
-        }
+        setLineSpace(helper.lineSpace);
+        setTextColor(helper.textColor);
         if (helper.drawableScale != 1) {
             setDrawableScale(helper.drawableScale);
         }
@@ -103,6 +96,8 @@ public class FTextDrawable extends Drawable implements Drawable.Callback{
         }
         setGravity(helper.gravity);
         setEllipsizeText(helper.ellipsizeText);
+        setMaxWidth(helper.maxWidth);
+        setMaxHeight(helper.maxHeight);
     }
 
     //<editor-folder desc="public method">
@@ -296,7 +291,7 @@ public class FTextDrawable extends Drawable implements Drawable.Callback{
     }
 
     public void setMaxLines(int maxLines) {
-        maxLines = maxLines < 1 ? 1 : maxLines;
+        maxLines = maxLines <= 0 ? Integer.MAX_VALUE : maxLines;
         if (this.maxLines != maxLines) {
             this.maxLines = maxLines;
             if (mText != null) {
@@ -323,7 +318,9 @@ public class FTextDrawable extends Drawable implements Drawable.Callback{
     public void onDetachedFromWindow() {
         if (blockList != null) {
             blockList.notUse();
+            blockList.removeCallback(this);
         }
+        immutableParams.clearClickBlockInfo();
         blockList = null;
     }
 
@@ -415,6 +412,7 @@ public class FTextDrawable extends Drawable implements Drawable.Callback{
             } else {
                 blockList = compiler.compile(mText);
                 blockList.addCallback(this);
+                blockList.setNeedSetCallbackCount(blockList.getNeedSetCallbackCount());
             }
         } else {
             throw new NullPointerException("compiler is null, please set compiler before set text!");

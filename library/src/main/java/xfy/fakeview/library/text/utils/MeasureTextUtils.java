@@ -8,6 +8,7 @@ public class MeasureTextUtils {
     public static final int STATE_TIMEOUT = 1;
     public static final int STATE_ERROR = 2;
 
+    public static final int HEIGHT_MAX_SIZE = 1 << 12;
     private static final long WIDTH_FLAG = 0xfffl;              //最后12位表示 width  用12位可表示4096的长度，能表示一般屏幕像素个数
     private static final long LEFT_FLAG  = 0xfff000l;           //第13位到24位表示 left 用12位可表示4096的长度，能表示一般屏幕像素个数
     private static final int LEFT_OFFSET = 12;                  //left结果需右移12位
