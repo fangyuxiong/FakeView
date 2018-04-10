@@ -1,7 +1,7 @@
 # NewTextView
 一个新的TextView继承自View，主要实现类为FTextDrawable，减少设置文本耗时，内存占用。建议在列表中使用。
 
-经测试，将消息列表中文本消息改为NewTextView后，平均设置文本耗时为之前的1/10，LayoutTextView设置文本耗时在0.7ms~1.3ms之间，NewTextView设置文本耗时在0.08ms~0.09ms，偶尔有0.1ms或1ms耗时。
+经测试，将消息列表中文本消息改为NewTextView后，平均设置文本耗时为之前的1/10，LayoutTextView设置文本耗时在0.7ms到1.3ms之间，NewTextView设置文本耗时在0.08ms到0.09ms，偶尔有0.1ms或1ms耗时。
 # 不足
 不可设置文本上下左右的Drawable(`TextView#setCompoundDrawables`)，不可设置省略号位置，默认在最后（TextView可设置在开头，中部或结尾）。
 # 使用方法
