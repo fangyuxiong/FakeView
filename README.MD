@@ -9,7 +9,7 @@ FakeView就是为了提取出日常使用较多，且容易造成layout层级过
 
 附带减少view层级的[工具](Tools.MD)
 
-0.50版本新增[NewText](NewText.MD)
+新增[NewText](NewText.MD)强力推荐
 
 ## 原理
 FakeView提取出在屏幕绘制一个控件最基本的动作：创建-计算-布局-绘制，并将其封装为FView和FViewGroup，分别模拟View和ViewGroup；提取出根调度器FViewRootImpl（View子类）模拟ViewRootImpl，调度"计算"、"布局"、"绘制"等动作，并将所有FView加进FViewRootImpl，实现合并图层，减少过度绘制。
