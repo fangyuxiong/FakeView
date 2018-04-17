@@ -12,6 +12,11 @@ import xfy.fakeview.library.text.compiler.DrawableTextCompiler;
  */
 public class DefaultResourceAdapter implements DrawableTextCompiler.ResourceAdapter {
     @Override
+    public void beforeCompile() {
+
+    }
+
+    @Override
     public int parseRes(@NonNull CharSequence text) {
         return LayoutHelper.getRes(text.toString());
     }

@@ -13,12 +13,12 @@ import android.graphics.drawable.Drawable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import xfy.fakeview.library.text.utils.CallbackObserver;
+import xfy.fakeview.library.text.utils.IDrawableStats;
 
 /**
  * Created by XiongFangyu on 2018/3/29.
  */
-public class SpecialDrawable extends Drawable implements CallbackObserver{
+public class SpecialDrawable extends Drawable implements IDrawableStats{
     private final Path path;
     private final Paint paint;
 
@@ -104,6 +104,21 @@ public class SpecialDrawable extends Drawable implements CallbackObserver{
             if (anim != null)
                 anim.cancel();
         }
+    }
+
+    @Override
+    public void setCountInText(int c) {
+
+    }
+
+    @Override
+    public boolean needCreateNewDrawable() {
+        return false;
+    }
+
+    @Override
+    public void recycle() {
+
     }
 
     private void initAnim() {

@@ -20,6 +20,10 @@ public class MeasureTextUtils {
     private static final int STATE_OFFSET = 62;                 //直接右移62位得到state
 
     private static boolean libraryLoaded;
+    private static boolean forceUseJavaMeasure = false;
+    public static void setForceUseJavaMeasure(boolean force) {
+        forceUseJavaMeasure = force;
+    }
     static {
         try {
             System.loadLibrary("measure");
@@ -118,8 +122,13 @@ public class MeasureTextUtils {
     }
 
     public static long measureTextByNative(long flag, int left, int right, float[] widths) {
-        if (libraryLoaded)
-            return nativeMeasureText(flag, left, right, widths);
+        if (libraryLoaded && !forceUseJavaMeasure) {
+            try {
+                return nativeMeasureText(flag, left, right, widths);
+            } catch (Throwable t) {
+                libraryLoaded = false;
+            }
+        }
         return measureText(flag, left, right, widths, 0);
     }
 
