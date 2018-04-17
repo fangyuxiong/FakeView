@@ -89,8 +89,12 @@ uint64 measure(uint64 flag, uint32 left, uint32 right, jfloat *widths, uint32 le
 JNIEXPORT jlong JNICALL Java_xfy_fakeview_library_text_utils_MeasureTextUtils_nativeMeasureText
   (JNIEnv *env, jclass obj, jlong flag, jint left, jint right, jfloatArray widths)
 {
+    if (widths == NULL) {
+        return 0;
+    }
     jint len = (*env)->GetArrayLength(env, widths);
     jfloat *widthArray = (*env)->GetFloatArrayElements(env, widths, 0);
     flag = measure(flag, left, right, widthArray, len);
+    (*env)->ReleaseFloatArrayElements(env, widths, widthArray, 0);
     return flag;
 }
