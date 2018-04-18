@@ -349,7 +349,7 @@ public class TextDrawer {
             drawableSize = 0;
         }
         BlockMeasureParams params = BlockMeasureParams.obtain()
-                .setLineInfo(getLineInfo(immutableParams.paint, drawableSize, includePad))
+                .setLineInfo(getLineInfo(immutableParams.paint, drawableSize, immutableParams.forceLineHeight, includePad))
                 .setDrawableSize(drawableSize)
                 .setCurrentLeft(currentLeft)
                 .setCurrentTop(0)
@@ -367,14 +367,17 @@ public class TextDrawer {
      * @param includePad include font padding
      * @return 第一行baseline
      */
-    public static int getLineInfo(TextPaint paint, int drawableSize, boolean includePad) {
+    public static int getLineInfo(TextPaint paint, int drawableSize, int forceHeight, boolean includePad) {
         Paint.FontMetricsInt fontMetricsInt = getFontMetricsInt();
         paint.getFontMetricsInt(fontMetricsInt);
         int top = getFontHeightCalTop(fontMetricsInt, includePad);
         int bot = getFontHeightCalBottom(fontMetricsInt, includePad);
         int fh = bot - top;
         int baseLine = -top;
-        if (fh < drawableSize) {
+        if (forceHeight > 0) {
+            baseLine += (forceHeight - fh) >> 1;
+            fh = forceHeight;
+        } else if (fh < drawableSize) {
             baseLine += (drawableSize - fh) >> 1;
             fh = drawableSize;
         }

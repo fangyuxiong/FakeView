@@ -154,10 +154,16 @@ public class DefaultDrawableBlock implements IDrawableBlock<DefaultDrawableBlock
         switch (type) {
             case TEXT:
                 float oldTextSize = textPaint.getTextSize();
-                if (textStyleParams != null && textStyleParams.hasTextSize) {
-                    textPaint.setTextSize(textStyleParams.textSize);
-                    if (textStyleParams.textSize > oldTextSize) {
-                        int flag = TextDrawer.getLineInfo(textPaint, drawableSize, includePad);
+                if (textStyleParams != null) {
+                    int forceLineHeight = textStyleParams.forceLineHeight;
+                    if (forceLineHeight <= 0) {
+                        forceLineHeight = immutableParams.forceLineHeight;
+                    }
+                    if (textStyleParams.hasTextSize) {
+                        textPaint.setTextSize(textStyleParams.textSize);
+                    }
+                    if (textStyleParams.textSize > oldTextSize || forceLineHeight > 0) {
+                        int flag = TextDrawer.getLineInfo(textPaint, drawableSize, forceLineHeight, includePad);
                         fontHeight = LineUtils.getLineHeight(flag);
                         baseLine = LineUtils.getBaseLine(flag);
                         measureParams.lineInfo = LineUtils.combime(fontHeight, baseLine);
