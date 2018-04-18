@@ -24,6 +24,8 @@ public class ImmutableParams {
     public int bottom;
     //文字gravity
     public int gravity = Gravity.LEFT | Gravity.TOP;
+    //强制行高
+    public int forceLineHeight = -1;
     //图片高度
     public int drawableHeight;
     //省略号的位置

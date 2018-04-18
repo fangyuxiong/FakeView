@@ -18,6 +18,8 @@ public class BaseSpan {
     private boolean hasBColor;
     //背景色
     private int backgroundColor;
+    //强制文本高度
+    public int forceLineHeight = -1;
 
     public BaseSpan boldText() {
         bold = true;
@@ -43,6 +45,11 @@ public class BaseSpan {
     public BaseSpan withBackgroundColor(int color) {
         backgroundColor = color;
         hasBColor = true;
+        return this;
+    }
+
+    public BaseSpan withForceLineHeight(int forceLineHeight) {
+        this.forceLineHeight = forceLineHeight;
         return this;
     }
 

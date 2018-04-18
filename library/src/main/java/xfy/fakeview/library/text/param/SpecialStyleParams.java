@@ -29,6 +29,8 @@ public class SpecialStyleParams {
     public boolean hasTextSize;
     //文字大小
     public float textSize;
+    //强制文本高度
+    public int forceLineHeight = -1;
 
     private static final ArrayList<SpecialStyleParams> cache;
     private static final int DEFAULT_SIZE = 30;
@@ -72,6 +74,7 @@ public class SpecialStyleParams {
         bold = underline = italic = false;
         hasTextSize = false;
         textSize = 0;
+        forceLineHeight = -1;
         putToCache(this);
     }
 
@@ -93,6 +96,7 @@ public class SpecialStyleParams {
         bold = span.isBold();
         underline = span.isUnderline();
         italic = span.isItalic();
+        forceLineHeight = span.forceLineHeight;
         return this;
     }
 
@@ -122,6 +126,11 @@ public class SpecialStyleParams {
     public SpecialStyleParams withTextSize(float px) {
         hasTextSize = true;
         textSize = px;
+        return this;
+    }
+
+    public SpecialStyleParams withForceLineHeight(int forceLineHeight) {
+        this.forceLineHeight = forceLineHeight;
         return this;
     }
 }

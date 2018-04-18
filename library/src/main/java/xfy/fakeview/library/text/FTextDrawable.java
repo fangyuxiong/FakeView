@@ -346,6 +346,19 @@ public class FTextDrawable extends Drawable implements Drawable.Callback{
     public void setLayoutTextByGravity(boolean auto) {
         immutableParams.translateByGravity = auto;
     }
+
+    public void setForceLineHeight(int forceLineHeight) {
+        if (immutableParams.forceLineHeight != forceLineHeight) {
+            immutableParams.forceLineHeight = forceLineHeight;
+            needMeasureTextLines = true;
+            if (mText != null) {
+                if (autoMeasure)
+                    measure();
+                requestLayout();
+                invalidateSelf();
+            }
+        }
+    }
     //</editor-folder>
 
     //<editor-folder desc="drawable method">
