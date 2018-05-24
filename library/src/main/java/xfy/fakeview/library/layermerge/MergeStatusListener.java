@@ -1,7 +1,5 @@
 package xfy.fakeview.library.layermerge;
 
-import android.widget.FrameLayout;
-
 /**
  * Created by XiongFangyu on 2017/11/23.
  *
@@ -12,26 +10,22 @@ public interface MergeStatusListener {
     int FAILED_TYPE_TOO_MANY_ZERO_VIEWS = -2;
     /**
      * Call when merging failed
-     * @param layout layout whitch is failed to merge
-     * @param tag
-     * @param extractInfo custom extracing info
+     * @param layoutData
      * @param failTimes merging failed times
      * @param type failed type
      *
      */
-    void onMergeFailed(FrameLayout layout, Object tag, int extractInfo, int failTimes, int type);
+    void onMergeFailed(LayoutData layoutData, int failTimes, int type);
 
     /**
      * Called when merging success
-     * @param layout layout whitch is successfully merged
-     * @param tag
+     * @param layoutData
      */
-    void onMergeSuccess(FrameLayout layout, Object tag);
+    void onMergeSuccess(LayoutData layoutData);
 
     /**
      * Called when merging action really start
-     * @param layout layout whitch is successfully merged
-     * @param tag
+     * @param layoutData
      */
-    void onMergeStart(FrameLayout layout, Object tag);
+    void onMergeStart(LayoutData layoutData);
 }

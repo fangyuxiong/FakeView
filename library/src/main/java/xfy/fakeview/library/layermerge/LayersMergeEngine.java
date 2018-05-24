@@ -9,6 +9,7 @@ import android.widget.FrameLayout;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Set;
 
 import xfy.fakeview.library.DebugInfo;
@@ -109,7 +110,7 @@ public class LayersMergeEngine implements OnExtractViewGroupListener, MergeStatu
      * @return true: add to scheduler, false otherwise
      */
     public boolean addMergeAction(Object tag, FrameLayout layout, int extractInfo) {
-        return addMergeAction(new LayoutData(tag, layout, extractInfo));
+        return addMergeAction(new LayoutData(tag, layout).withExtractInfo(extractInfo));
     }
 
     /**
@@ -144,10 +145,7 @@ public class LayersMergeEngine implements OnExtractViewGroupListener, MergeStatu
      * @param tag for searching this action
      */
     public synchronized void removeMergeActionByTag(Object tag) {
-        ArrayList<LayoutData> list = mergeActions.remove(tag);
-        if (list == null)
-            return;
-        list.clear();
+        releaseLayoutDataList(mergeActions.remove(tag));
         removeTags.add(tag);
     }
 
@@ -156,9 +154,7 @@ public class LayersMergeEngine implements OnExtractViewGroupListener, MergeStatu
      */
     public synchronized void removeAllAction() {
         for (Object k : mergeActions.keySet()) {
-            ArrayList<LayoutData> list = mergeActions.get(k);
-            if (list != null)
-                list.clear();
+            releaseLayoutDataList(mergeActions.get(k));
         }
         removeTags.addAll(mergeActions.keySet());
         mergeActions.clear();
@@ -206,6 +202,17 @@ public class LayersMergeEngine implements OnExtractViewGroupListener, MergeStatu
         }
     }
 
+    private void releaseLayoutDataList(List<LayoutData> data) {
+        if (data != null) {
+            for (LayoutData d : data) {
+                if (d != null) {
+                    d.removeListener();
+                }
+            }
+            data.clear();
+        }
+    }
+
     /**
      * Schedule next action.
      */
@@ -224,7 +231,7 @@ public class LayersMergeEngine implements OnExtractViewGroupListener, MergeStatu
         }
         if (!removeTags.isEmpty()) {
             for (Object tag : removeTags) {
-                mergeActions.remove(tag);
+                releaseLayoutDataList(mergeActions.remove(tag));
             }
             removeTags.clear();
         }
@@ -283,31 +290,31 @@ public class LayersMergeEngine implements OnExtractViewGroupListener, MergeStatu
     }
 
     @Override
-    public void onMergeFailed(FrameLayout layout, Object tag, int extractInfo, int failTimes, int type) {
+    public void onMergeFailed(LayoutData layout, int failTimes, int type) {
         if (mergeStatusListeners != null) {
             ArrayList<MergeStatusListener> temp = new ArrayList<>(mergeStatusListeners);
             for (int i = 0, l = temp.size(); i < l;i ++) {
-                temp.get(i).onMergeFailed(layout, tag, extractInfo, failTimes, type);
+                temp.get(i).onMergeFailed(layout, failTimes, type);
             }
         }
     }
 
     @Override
-    public void onMergeSuccess(FrameLayout layout, Object tag) {
+    public void onMergeSuccess(LayoutData layout) {
         if (mergeStatusListeners != null) {
             ArrayList<MergeStatusListener> temp = new ArrayList<>(mergeStatusListeners);
             for (int i = 0, l = temp.size(); i < l;i ++) {
-                temp.get(i).onMergeSuccess(layout, tag);
+                temp.get(i).onMergeSuccess(layout);
             }
         }
     }
 
     @Override
-    public void onMergeStart(FrameLayout layout, Object tag) {
+    public void onMergeStart(LayoutData layout) {
         if (mergeStatusListeners != null) {
             ArrayList<MergeStatusListener> temp = new ArrayList<>(mergeStatusListeners);
             for (int i = 0, l = temp.size(); i < l;i ++) {
-                temp.get(i).onMergeStart(layout, tag);
+                temp.get(i).onMergeStart(layout);
             }
         }
     }
@@ -322,6 +329,7 @@ public class LayersMergeEngine implements OnExtractViewGroupListener, MergeStatu
 
     /**
      * Merge action
+     * run in thread
      */
     private class Action implements Runnable {
         Object lock;
@@ -364,18 +372,14 @@ public class LayersMergeEngine implements OnExtractViewGroupListener, MergeStatu
                 @Override
                 public void run() {
                     if (!removeTags.contains(tag)) {
-                        if (!checkCanMerge()) {
-                            onCannotMerge(false, MergeStatusListener.FAILED_TYPE_NOT_READY);
-                        } else {
-                            if (statusListener != null)
-                                statusListener.onMergeStart(src, tag);
-                            LayersMergeManager manager = new LayersMergeManager(src, info, mzl, listener);
-                            if (!manager.mergeChildrenLayers()) {
-                                layout.failTimes++;
-                                onCannotMerge(false, MergeStatusListener.FAILED_TYPE_TOO_MANY_ZERO_VIEWS);
-                            } else if (statusListener != null) {
-                                statusListener.onMergeSuccess(src, tag);
-                            }
+                        if (statusListener != null)
+                            statusListener.onMergeStart(layout);
+                        LayersMergeManager manager = new LayersMergeManager(src, info, mzl, listener);
+                        if (!manager.mergeChildrenLayers()) {
+                            layout.failTimes++;
+                            onCannotMerge(false, MergeStatusListener.FAILED_TYPE_TOO_MANY_ZERO_VIEWS);
+                        } else if (statusListener != null) {
+                            statusListener.onMergeSuccess(layout);
                         }
                     }
                     synchronized (lock) {
@@ -406,13 +410,14 @@ public class LayersMergeEngine implements OnExtractViewGroupListener, MergeStatu
 
         private void onCannotMerge(boolean postNext, int type) {
             if (layout.mergeStatusListener != null) {
-                layout.mergeStatusListener.onMergeFailed(layout.layout, layout.tag,
-                        layout.extractInfo, layout.failTimes, type);
+                layout.mergeStatusListener.onMergeFailed(layout, layout.failTimes, type);
             }
             final Object tag = layout.tag;
             if (!removeTags.contains(tag)) {
                 if (layout.failTimes < layout.maxFailTimes) {
                     addMergeAction(layout);
+                } else {
+                    layout.removeListener();
                 }
             } else {
                 removeTags.remove(tag);
@@ -430,74 +435,8 @@ public class LayersMergeEngine implements OnExtractViewGroupListener, MergeStatu
         }
 
         private boolean checkViewIsLaidOut() {
-            return LayersMergeManager.isReadyToMerge(layout.layout, 0, layout.maxNotReadyCount);
-        }
-    }
-
-    public static class LayoutData {
-        FrameLayout layout;
-        int extractInfo = 0;
-        Object tag;
-        int maxFailTimes = 0;
-        int maxNotReadyCount = 3;
-        int maxZeroLocCountWhenExtracting = 3;
-        OnExtractViewGroupListener onExtractViewGroupListener;
-        MergeStatusListener mergeStatusListener;
-
-        int failTimes = 0;
-
-        public LayoutData(Object tag, FrameLayout layout, int extractInfo) {
-            this(tag, layout, extractInfo, 3);
-        }
-
-        public LayoutData(Object tag, FrameLayout layout, int extractInfo, int maxFailTimes) {
-            this(tag, layout, extractInfo, maxFailTimes, null);
-        }
-
-        public LayoutData(Object tag, FrameLayout layout, int extractInfo, int maxFailTimes, OnExtractViewGroupListener listener) {
-            this(tag, layout, extractInfo, maxFailTimes, 3, listener);
-        }
-
-        public LayoutData(Object tag, FrameLayout layout, int extractInfo, int maxFailTimes, int maxNotReadyCount, OnExtractViewGroupListener listener) {
-            this(tag, layout, extractInfo, maxFailTimes, maxNotReadyCount, 3, listener);
-        }
-
-        public LayoutData(Object tag, FrameLayout layout, int extractInfo, int maxFailTimes, int maxNotReadyCount, int maxZeroLocCountWhenExtracting, OnExtractViewGroupListener listener) {
-            this.tag = tag;
-            this.layout = layout;
-            this.extractInfo = extractInfo;
-            this.maxFailTimes = maxFailTimes;
-            onExtractViewGroupListener = listener;
-            this.maxNotReadyCount = maxNotReadyCount;
-            this.maxZeroLocCountWhenExtracting = maxZeroLocCountWhenExtracting;
-            checkValid();
-        }
-
-        public LayoutData withMergeFailedListener(MergeStatusListener listener) {
-            mergeStatusListener = listener;
-            return this;
-        }
-
-        public LayoutData withExtractViewGroupListener(OnExtractViewGroupListener listener) {
-            onExtractViewGroupListener = listener;
-            return this;
-        }
-
-        public LayoutData checkValid() {
-            if (layout == null)
-                throw new NullPointerException("layout must not be null!");
-            if (tag == null)
-                throw new NullPointerException("tag must not be null!");
-            if (extractInfo < 0)
-                throw new IllegalArgumentException("extract info is invalid!");
-            if (maxFailTimes < 0)
-                throw new IllegalArgumentException("maxFailTimes is invalid!");
-            return this;
-        }
-
-        @Override
-        public String toString() {
-            return layout + " info: " + extractInfo + " " + tag;
+//            return LayersMergeManager.isReadyToMerge(layout.layout, 0, layout.maxNotReadyCount);
+            return layout.canMerge();
         }
     }
 
