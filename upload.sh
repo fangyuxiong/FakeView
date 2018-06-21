@@ -7,3 +7,5 @@ function checkBranch {
     git checkout $1
     git merge ${b_dev} < merge
 }
+
+checkBranch $b_git
