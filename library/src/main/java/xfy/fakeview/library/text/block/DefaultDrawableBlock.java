@@ -5,6 +5,7 @@ import android.graphics.drawable.Drawable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextPaint;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -12,6 +13,7 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
+import xfy.fakeview.library.DebugInfo;
 import xfy.fakeview.library.text.drawer.TextDrawableDrawer;
 import xfy.fakeview.library.text.drawer.TextDrawer;
 import xfy.fakeview.library.text.param.ClickSpanBlockInfo;
@@ -30,6 +32,7 @@ import xfy.fakeview.library.text.utils.NoCacheSpanRegister;
  * Created by XiongFangyu on 2018/3/2.
  */
 public class DefaultDrawableBlock implements IDrawableBlock<DefaultDrawableBlockList>, Drawable.Callback {
+    private static final String TAG = "Fake--Block";
     private int type;
     private CharSequence mText;
     private SpecialStyleParams textStyleParams;
@@ -260,8 +263,12 @@ public class DefaultDrawableBlock implements IDrawableBlock<DefaultDrawableBlock
                 break;
             case SPAN:
                 DefaultDrawableBlockList children = getChildren();
-                if (children == null)
+                if (children == null) {
+                    if (DebugInfo.DEBUG) {
+                        Log.e(TAG, "invalid block list");
+                    }
                     return false;
+                }
                 boolean result = true;
                 for (int i = 0, l = children.size(); i < l; i ++) {
                     if (!children.get(i).draw(canvas, variableParams, immutableParams)) {
@@ -270,6 +277,9 @@ public class DefaultDrawableBlock implements IDrawableBlock<DefaultDrawableBlock
                 }
                 return result;
             default:
+                if (DebugInfo.DEBUG) {
+                    Log.e(TAG, "invalid type " + type + " " + toString());
+                }
                 return false;
         }
         return true;
@@ -483,5 +493,10 @@ public class DefaultDrawableBlock implements IDrawableBlock<DefaultDrawableBlock
             if (callback != null)
                 callback.unscheduleDrawable(who, what);
         }
+    }
+
+    @Override
+    public String toString() {
+        return String.valueOf(mText);
     }
 }

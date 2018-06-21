@@ -1,6 +1,7 @@
 package xfy.fakeview.library.text.block;
 
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.support.annotation.NonNull;
 import android.util.Log;
@@ -11,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import xfy.fakeview.library.DebugInfo;
+import xfy.fakeview.library.text.DebugDrawer;
 import xfy.fakeview.library.text.param.ClickSpanBlockInfo;
 import xfy.fakeview.library.text.param.ImmutableParams;
 import xfy.fakeview.library.text.param.VariableParams;
@@ -227,6 +229,7 @@ public class DefaultDrawableBlockList extends ArrayList<DefaultDrawableBlock> im
         int ty = SimpleGravity.getTop(flag) - t;
         if (tx == 0 && ty == 0)
             return false;
+        DebugDrawer.draw(canvas, tx, ty, Color.BLUE);
         canvas.translate(tx, ty);
         return true;
     }
@@ -453,6 +456,16 @@ public class DefaultDrawableBlockList extends ArrayList<DefaultDrawableBlock> im
                 break;
         }
         return true;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0, l = size(); i < l;i ++) {
+            DefaultDrawableBlock block = get(i);
+            sb.append(String.valueOf(block));
+        }
+        return sb.toString();
     }
 
     private long now() {
