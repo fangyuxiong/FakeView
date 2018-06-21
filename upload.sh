@@ -8,4 +8,5 @@ function checkBranch {
     git merge ${b_dev} < merge
 }
 
+
 checkBranch $b_git
