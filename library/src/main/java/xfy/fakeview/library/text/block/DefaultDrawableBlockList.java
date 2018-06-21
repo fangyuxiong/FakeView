@@ -9,6 +9,7 @@ import android.view.MotionEvent;
 import android.view.View;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import xfy.fakeview.library.DebugInfo;
@@ -325,6 +326,7 @@ public class DefaultDrawableBlockList extends ArrayList<DefaultDrawableBlock> im
         if (!checkNeedMeasure(measureParams, immutableParams)) {
             return lastFlag;
         }
+        clearLineFlags();
         long flag = MeasureTextUtils.setLines(0, 1);
         int len = size();
         for (int i = 0; i < len; i ++) {
@@ -415,6 +417,12 @@ public class DefaultDrawableBlockList extends ArrayList<DefaultDrawableBlock> im
                 System.arraycopy(lineFlags, 0, temp, 0, lines);
             lineFlags = temp;
         }
+    }
+
+    private void clearLineFlags() {
+        if (lineFlags == null)
+            return;
+        Arrays.fill(lineFlags, 0);
     }
 
     @Override
