@@ -13,6 +13,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import xfy.fakeview.library.text.DebugDrawer;
 import xfy.fakeview.library.text.NewTextView;
 import xfy.fakeview.library.text.compiler.ClickSpanTextCompiler;
 import xfy.fakeview.library.text.compiler.DrawableTextCompiler;
@@ -75,6 +76,7 @@ public class TestNewTextActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        DebugDrawer.setDebug(true);
         setContentView(R.layout.activity_test_new_text);
         initData(getIntent());
         initView();

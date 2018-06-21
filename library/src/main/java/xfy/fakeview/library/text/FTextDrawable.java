@@ -17,6 +17,7 @@ import android.view.View;
 
 import java.lang.ref.WeakReference;
 
+import xfy.fakeview.library.DebugInfo;
 import xfy.fakeview.library.text.block.IDrawableBlock;
 import xfy.fakeview.library.text.block.IDrawableBlockList;
 import xfy.fakeview.library.text.compiler.ITextCompiler;
@@ -379,7 +380,11 @@ public class FTextDrawable extends Drawable implements Drawable.Callback{
         initParamsBeforeDraw();
         if (needDrawLines <= 0)
             return;
-        blockList.draw(canvas, variableParams, immutableParams);
+        DebugDrawer.draw(canvas, bounds);
+        boolean result = blockList.draw(canvas, variableParams, immutableParams);
+        if (DebugInfo.DEBUG && !result) {
+            Log.e(TAG, "draw text failed");
+        }
     }
 
     @Override
