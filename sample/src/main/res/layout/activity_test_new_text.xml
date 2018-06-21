@@ -48,20 +48,20 @@
         android:maxLines="5"
         android:textColor="#000"
         android:lineSpacingExtra="0px"
-        android:text="h1(font size='30px' color='white' weight='600' background='blue')今天天气真好，晚上来家坐坐呀(/font)h2(font size='100px' color='red' weight='800')@王先asfsadfsdfsadfds生(/font)h3"
+        android:text="a"
         app:fntv_drawable_scale="1"
-        app:fntv_text_compiler="click_span"
+        app:fntv_text_compiler="text_only"
         android:background="#af00"/>
 
     <xfy.fakeview.library.text.NewTextView
         android:id="@+id/new_text2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="20sp"
+        android:textSize="40sp"
         android:maxLines="3"
         android:textColor="#f00"
         android:lineSpacingExtra="0px"
-        android:text="test"
+        android:text="a"
         app:fntv_text_compiler="text_only"
         android:background="#a0f0"/>
 

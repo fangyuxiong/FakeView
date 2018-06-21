@@ -234,10 +234,10 @@ public class FTextDrawable extends Drawable implements Drawable.Callback{
     }
 
     public void justSetMaxSize(int maxWidth, int maxHeight) {
-        boolean changed = this.maxWidth != maxWidth || this.maxHeight != maxHeight;
+//        boolean changed = this.maxWidth != maxWidth || this.maxHeight != maxHeight;
         this.maxWidth = maxWidth;
         this.maxHeight = maxHeight;
-        if (changed && mText != null) {
+        if (/*changed && */mText != null) {
             needMeasureTextLines = true;
             needMeasureText = true;
         }
