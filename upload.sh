@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 b_dev=dev
-b_git=release_github
-b_mm=release_mm
+b_git=release-github
+b_mm=release-mm
 
 function checkBranch {
     git checkout $1
