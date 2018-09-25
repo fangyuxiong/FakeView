@@ -3,6 +3,7 @@ package com.xfy.fakeview;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.util.Log;
 import android.util.TypedValue;
@@ -112,6 +113,7 @@ public class TestNewTextActivity extends Activity {
         newTextView.setForceMeasureBlockList(true);
         newTextView2.setForceMeasureBlockList(true);
         newTextView2.setBoldText(true);
+        newTextView2.setTypeface(Typeface.createFromAsset(getAssets(), "test.ttf"));
         newTextView2.setText("a");
 //        newTextView.setText("h1(font size='30px' color='white' weight='600' background='blue')今天天气真好，晚上来家坐坐呀(/font)h2(font size='100px' color='red' weight='800')@王先asfsadfsdfsadfds生(/font)h3");
     }

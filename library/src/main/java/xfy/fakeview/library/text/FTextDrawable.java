@@ -194,6 +194,20 @@ public class FTextDrawable extends Drawable implements Drawable.Callback{
         invalidateSelf();
     }
 
+    public void setTypeface(Typeface tf) {
+        if (mTextPaint.getTypeface() == tf) {
+            return;
+        }
+        Typeface old = mTextPaint.getTypeface();
+        Typeface ntf = Typeface.create(tf, old.getStyle());
+        mTextPaint.setTypeface(ntf);
+        needMeasureTextLines = true;
+        if (autoMeasure)
+            measure();
+        requestLayout();
+        invalidateSelf();
+    }
+
     public void setDrawableSize(int drawableSize) {
         drawableSizeSetted = true;
         if (this.drawableSize != drawableSize) {
